@@ -7,90 +7,142 @@
     <title>भक्ति ट्यूब</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
-        body { background: #FFF8F0; color: #3E2723; }
+        :root {
+            --bg-color: #FFF8F0;
+            --text-color: #3E2723;
+            --card-bg: #FFFFFF;
+        }
+        body { font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; overflow-x: hidden; }
+        body.dark-mode { background: #202124; color: #e8eaed; }
+        body.dark-mode .video-card { background: #303134; border-color: #5f6368; }
+
+        body::before, body::after { content: ""; position: fixed; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #D32F2F, #E65100, #FF9933); z-index: 999; }
+        body::before { left: 0; }
+        body::after { right: 0; }
+
         ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: #FFE0B2; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #D32F2F, #FFB300); border-radius: 10px; }
 
-        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 56px; background: linear-gradient(90deg, #D32F2F, #E65100); border-bottom: 4px solid #FFD700; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
-        .logo { font-size: 1.4rem; font-weight: 800; color: #FFD700; display: flex; align-items: center; gap: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .logo i { font-size: 1.8rem; color: #FFFFFF; }
-        .logo span { color: #FFFFFF; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 56px; background: linear-gradient(90deg, #D32F2F, #E65100); border-bottom: 4px solid #FFD700; position: sticky; top: 0; z-index: 100; }
+        
+        .logo { font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .logo i { font-size: 1.4rem; background: linear-gradient(45deg, #FFD700, #FFFFFF, #FFA500); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .logo span { background: linear-gradient(45deg, #FFD700, #FFFFFF); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
 
-        .header-center { flex: 1; display: flex; align-items: center; max-width: 600px; margin: 0 8px; background: #FFFFFF; border-radius: 40px; border: 2px solid #FFD700; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header-center input { flex: 1; background: transparent; border: none; padding: 6px 12px; color: #3E2723; font-size: 0.9rem; outline: none; font-weight: 500; }
-        .header-center button { background: transparent; border: none; color: #D32F2F; padding: 0 10px; cursor: pointer; font-size: 1.1rem; }
+        .header-left { display: flex; align-items: center; gap: 5px; }
+        .header-center { flex: 1; display: flex; align-items: center; max-width: 600px; margin: 0 5px; background: #FFFFFF; border-radius: 40px; border: 2px solid #FFD700; }
+        .header-center input { flex: 1; background: transparent; border: none; padding: 6px 10px; color: #3E2723; font-size: 0.9rem; outline: none; font-weight: 500; }
+        .header-center button { background: transparent; border: none; color: #D32F2F; padding: 0 8px; cursor: pointer; font-size: 1rem; }
 
-        .header-right { display: flex; gap: 5px; flex-shrink: 0; }
-        .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1rem; }
+        .header-right { display: flex; gap: 5px; flex-shrink: 0; align-items: center; }
+        .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         .icon-btn:hover { background: #FFD700; color: #D32F2F; }
+        .menu-btn { font-size: 1.6rem; cursor: pointer; color: #FFFFFF; padding: 0 5px; margin-left: 5px; }
 
-        /* Developer Bar */
-        .developer-bar { background: #FFF8F0; text-align: center; padding: 6px 10px; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #FFE0B2; color: #5D4037; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .developer-bar span { color: #D32F2F; }
-        .developer-bar a { color: #E65100; text-decoration: none; font-weight: 700; }
+        .developer-bar { background: var(--bg-color); text-align: center; padding: 3px 10px; font-size: 0.7rem; font-weight: 700; border-bottom: 1px solid #FFE0B2; }
+        .dev-text { background: linear-gradient(90deg, #D32F2F, #E65100, #FFB300); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-        .video-container { max-width: 600px; margin: 0 auto; padding: 10px; display: flex; flex-direction: column; gap: 20px; }
-        .video-card { background: #FFFFFF; border-radius: 16px; overflow: hidden; transition: 0.3s; border: 2px solid #FFE0B2; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-        .video-card:hover { border-color: #FFB300; box-shadow: 0 12px 28px rgba(211,47,47,0.15); }
-        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #FFF3E0; overflow: hidden; cursor: pointer; }
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+        .drawer { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: var(--card-bg); z-index: 999; box-shadow: 4px 0 20px rgba(0,0,0,0.3); transform: translateX(-100%); transition: transform 0.3s; padding-bottom: 10px; overflow-y: auto; border-right: 4px solid #FFD700; }
+        .drawer.open { transform: translateX(0); }
+        .drawer-item { display: flex; align-items: center; gap: 15px; padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 1.05rem; color: #3E2723; }
+        .drawer-item:hover { background: #f1f3f4; }
+        .drawer-item i { width: 24px; text-align: center; color: #D32F2F; }
+
+        .video-container { width: 100%; max-width: none; margin: 10px auto; padding: 0 10px; display: flex; flex-direction: column; gap: 12px; }
+        .video-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 2px solid #FFD700; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #FFF8F0; cursor: pointer; }
         .video-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .video-thumb .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(211,47,47,0.3); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #FFD700; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(211,47,47,0.3); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #FFD700; }
+        .video-info { padding: 10px 14px; }
+        .video-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+        .video-meta { font-size: 0.85rem; margin-top: 6px; display: flex; justify-content: space-between; }
 
-        .video-player { display: none; width: 100%; padding-top: 56.25%; position: relative; background: #000; }
-        .video-player iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .video-card.playing .video-thumb { display: none; }
-        .video-card.playing .video-player { display: block; }
+        .fullscreen-player { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: #000; display: none; }
+        .fullscreen-player.open { display: block; }
+        .fullscreen-player iframe { width: 100%; height: 100%; border: none; }
+        .close-player { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #FFF; border: none; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 10001; }
 
-        .video-info { padding: 12px 14px; }
-        .video-title { font-size: 1rem; font-weight: 700; color: #3E2723; line-height: 1.3; }
-        .video-meta { font-size: 0.85rem; color: #5D4037; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
-        .video-meta .channel { color: #D32F2F; font-weight: 600; }
+        .load-more-btn { width: 100%; padding: 15px; background: #D32F2F; color: white; font-size: 1.1rem; border: none; cursor: pointer; margin-top: 20px; border-radius: 10px; }
+        .load-more-btn:hover { background: #E65100; }
 
         .mala-modal, .calendar-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(62,39,35,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .mala-modal.open, .calendar-modal.open { display: flex; }
-        .mala-box, .calendar-box { background: #FFF8F0; border-radius: 24px; padding: 20px; max-width: 400px; width: 92%; border: 4px solid #FFD700; text-align: center; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 12px; background: transparent; border: none; color: #5D4037; font-size: 1.8rem; cursor: pointer; }
+        .mala-box, .calendar-box { background: var(--card-bg); border-radius: 24px; padding: 20px; max-width: 400px; width: 92%; border: 4px solid #FFD700; text-align: center; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 12px; background: transparent; border: none; color: var(--text-color); font-size: 1.8rem; cursor: pointer; }
         .counter-display { font-size: 4rem; font-weight: 900; margin: 12px 0; color: #D32F2F; text-shadow: 2px 2px 0 #FFD700; }
         .controls { display: flex; gap: 10px; justify-content: center; margin: 16px 0; }
         .controls button { background: #FFFFFF; border: 2px solid #D32F2F; color: #D32F2F; padding: 10px 20px; border-radius: 40px; font-size: 1rem; font-weight: 700; cursor: pointer; }
         .controls button.primary { background: #D32F2F; color: #FFFFFF; }
-        .calendar-box .main-date { font-size: 1.2rem; font-weight: 700; background: #FFFFFF; padding: 10px; border-radius: 16px; border: 2px solid #FFB300; margin-bottom: 12px; }
-        .hindu-details { background: #FFFFFF; padding: 12px; border-radius: 16px; border: 2px solid #FFB300; text-align: left; line-height: 1.8; font-size: 0.95rem; }
-        .special { color: #E65100; font-weight: 700; background: #FFF3E0; padding: 4px 8px; border-radius: 20px; display: inline-block; margin-top: 4px; }
+
+        .quota-timer { text-align: center; padding: 30px; font-size: 1.2rem; border: 2px dashed #D32F2F; border-radius: 10px; margin: 20px 0; color: #D32F2F; }
     </style>
 </head>
 <body>
 
 <header class="header">
-    <div class="logo"><i class="fas fa-om"></i><span>भक्ति ट्यूब</span></div>
+    <div class="header-left">
+        <div class="logo"><i class="fas fa-om"></i><span>भक्ति ट्यूब</span></div>
+        <div class="menu-btn" onclick="toggleDrawer()">⋮</div>
+    </div>
     <div class="header-center">
-        <input type="text" id="searchInput" placeholder="भक्ति खोजें (शिव, हनुमान, राम)..." onkeyup="searchVideos()">
+        <input type="text" id="searchInput" placeholder="भक्ति खोजें (शिव, हनुमान, कथा)..." onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
     <div class="header-right">
+        <button class="icon-btn" onclick="toggleFullscreen()" title="फुल स्क्रीन"><i class="fas fa-expand"></i></button>
         <button class="icon-btn" onclick="goHome()" title="होम"><i class="fas fa-home"></i></button>
-        <button class="icon-btn" onclick="openMala()"><i class="fas fa-hands-praying"></i></button>
-        <button class="icon-btn" onclick="openCalendar()"><i class="fas fa-calendar-alt"></i></button>
+        <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
+        <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
     </div>
 </header>
 
-<!-- Developer Info Bar -->
 <div class="developer-bar">
-    <i class="fas fa-code"></i> <span>Developer:</span> <strong style="color:#D32F2F;">DIVY</strong> | <a href="tel:9369224174"><i class="fas fa-phone"></i> 9369224174</a>
+    <span class="dev-text">Developer: दिव्य | 9369224174</span>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-item" onclick="searchHistory()"><i class="fas fa-history"></i> खोज इतिहास</div>
+    <div class="drawer-item" onclick="searchCategory('कथा')"><i class="fas fa-book-open"></i> कथा</div>
+    <div class="drawer-item" onclick="searchCategory('आरती')"><i class="fas fa-hands-praying"></i> आरती</div>
+    <div class="drawer-item" onclick="searchCategory('भक्ति भजन')"><i class="fas fa-music"></i> भक्ति गाने और भजन</div>
+    <div class="drawer-item" onclick="searchCategory('भगवद गीता')"><i class="fas fa-om"></i> भगवद गीता</div>
+    <div class="drawer-item" onclick="searchCategory('रामायण')"><i class="fas fa-book"></i> रामायण</div>
+    <div class="drawer-item" onclick="searchCategory('श्री कृष्ण लीला')"><i class="fas fa-flute"></i> श्री कृष्ण लीला</div>
+    <div class="drawer-item" onclick="searchCategory('महाभारत')"><i class="fas fa-shield-halved"></i> महाभारत</div>
+    <div class="drawer-item" onclick="searchCategory('भक्ति फिल्म')"><i class="fas fa-film"></i> भक्ति फिल्म</div>
+    <div class="drawer-item" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> डार्क मोड</div>
+    <div class="drawer-item" onclick="exitApp()"><i class="fas fa-sign-out-alt"></i> बाहर निकलें</div>
 </div>
 
 <div class="video-container" id="videoContainer"></div>
+<div id="loadMoreContainer" style="text-align:center; padding: 20px;"></div>
+
+<div class="fullscreen-player" id="fullscreenPlayer">
+    <button class="close-player" onclick="closeFullscreen()">✕</button>
+    <div id="fullscreenContent"></div>
+</div>
 
 <div class="mala-modal" id="malaModal">
     <div class="mala-box">
         <button class="close-btn" onclick="closeMala()">&times;</button>
         <h2 style="color:#D32F2F;"><i class="fas fa-hands-praying"></i> माला काउंटर</h2>
+        <div><label>मंत्र चुनें: </label>
+            <select id="mantraSelect" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                <option value="om-namah-shivaya">ॐ नमः शिवाय</option>
+                <option value="om">ॐ</option>
+                <option value="radhe">राधे राधे</option>
+                <option value="ram">राम राम</option>
+                <option value="jai-shree-ram">जय श्री राम</option>
+                <option value="hare-krishna">हरे कृष्ण</option>
+            </select>
+        </div>
         <div class="counter-display" id="counterDisplay">0</div>
         <div class="controls">
-            <button class="primary" onclick="incrementCounter()">जप करें</button>
+            <button class="primary" onclick="incrementCounter()">जप करें (🔔)</button>
             <button onclick="resetCounter()">रीसेट</button>
         </div>
     </div>
@@ -107,81 +159,259 @@
 <script>
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
     const container = document.getElementById('videoContainer');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    // Verified Video (Always works)
-    const verifiedVideo = { title: "🚩 हनुमान चालीसा - फास्ट", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" };
-
-    // Random Bhakti Queries for Home Screen
-    const homeQueries = [
-        "शिव भक्ति", "दुर्गा माता भजन", "राधा कृष्ण भजन", "राम भजन", 
-        "काली माता भजन", "गणेश भक्ति", "विष्णु भजन", "साईं बाबा भजन", 
-        "हनुमान चालीसा", "सुंदरकांड पाठ"
+    const commonSearches = [
+        "प्रेमानंद महाराज कथा", "बागेश्वर बाबा", "जया किशोरी", "अनिरुद्धाचार्य कथा", "राजन जी कथा",
+        "आरती", "भक्ति भजन", "शिव भजन", "दुर्गा चालीसा", "हनुमान चालीसा", "श्री कृष्ण लीला", "महाभारत"
     ];
+
+    let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
+    let lastResetDate = localStorage.getItem('bhakti_api_reset');
+
+    function checkQuota() {
+        const now = new Date();
+        if (lastResetDate !== now.toDateString()) {
+            apiCount = 0;
+            localStorage.setItem('bhakti_api_count', '0');
+            localStorage.setItem('bhakti_api_reset', now.toDateString());
+        }
+        return apiCount < 100;
+    }
+
+    function incrementQuota() {
+        apiCount++;
+        localStorage.setItem('bhakti_api_count', apiCount.toString());
+    }
+
+    function getTimeUntilMidnight() {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        return midnight - now;
+    }
+
+    function getCached(query) {
+        const cached = localStorage.getItem('bhakti_cache_' + query);
+        return cached ? JSON.parse(cached) : null;
+    }
+
+    function setCache(query, data) {
+        localStorage.setItem('bhakti_cache_' + query, JSON.stringify(data));
+    }
+
+    function saveHistory(query) {
+        let history = JSON.parse(localStorage.getItem('bhakti_history') || '[]');
+        history = [query, ...history.filter(q => q !== query)].slice(0, 10);
+        localStorage.setItem('bhakti_history', JSON.stringify(history));
+    }
+
+    function searchHistory() {
+        toggleDrawer();
+        let history = JSON.parse(localStorage.getItem('bhakti_history') || '[]');
+        if (history.length === 0) { alert("अभी तक कोई खोज नहीं हुई।"); return; }
+        let str = "आपकी हाल की खोजें:\n";
+        history.forEach((q, i) => { str += `${i+1}. ${q}\n`; });
+        alert(str);
+    }
+
+    function showQuotaTimer() {
+        const timeLeft = getTimeUntilMidnight();
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        container.innerHTML = `<div class="quota-timer">🕉️ आज की नई खोज सीमा समाप्त!<br> नई खोजें <strong>${hours} घंटे ${minutes} मिनट</strong> बाद उपलब्ध होंगी।</div>`;
+        loadMoreContainer.innerHTML = '';
+    }
+
+    function toggleDrawer() {
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('drawerOverlay');
+        drawer.classList.toggle('open');
+        overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    function searchCategory(category) {
+        toggleDrawer();
+        document.getElementById('searchInput').value = category;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (category === "कथा") {
+            const kathas = ["प्रेमानंद महाराज कथा", "बागेश्वर बाबा कथा", "जया किशोरी कथा", "अनिरुद्धाचार्य कथा", "राजन जी कथा"];
+            let allResults = [];
+            let promises = kathas.map(k => fetchYouTubeVideos(k));
+            Promise.all(promises).then(results => {
+                results.forEach(res => { if(res) allResults = allResults.concat(res); });
+                allResults.sort(() => Math.random() - 0.5);
+                renderVideos(allResults);
+            });
+        } else {
+            fetchVideos(category);
+        }
+    }
 
     function goHome() {
         document.getElementById('searchInput').value = '';
-        // Pick a random query
-        let randomQuery = homeQueries[Math.floor(Math.random() * homeQueries.length)];
+        let randomQuery = commonSearches[Math.floor(Math.random() * commonSearches.length)];
         fetchVideos(randomQuery);
     }
 
-    function fetchVideos(query) {
-        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=30`)
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        toggleDrawer();
+    }
+
+    function exitApp() {
+        toggleDrawer();
+        playBellSound();
+        alert("धन्यवाद! पुनः आएं!");
+    }
+
+    function playBellSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) {}
+    }
+
+    function playVideo(videoId) {
+        const fsPlayer = document.getElementById('fullscreenPlayer');
+        fsPlayer.classList.add('open');
+        document.getElementById('fullscreenContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    }
+
+    function closeFullscreen() {
+        const fsPlayer = document.getElementById('fullscreenPlayer');
+        fsPlayer.classList.remove('open');
+        document.getElementById('fullscreenContent').innerHTML = '';
+    }
+
+    function fetchYouTubeVideos(query) {
+        let cached = getCached(query);
+        if (cached) return Promise.resolve(cached);
+        if (!checkQuota()) return Promise.resolve([]);
+        incrementQuota();
+        return fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=10`)
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
-                    const results = data.items.map(item => ({
-                        title: item.snippet.title,
-                        videoId: item.id.videoId,
-                        channel: item.snippet.channelTitle
-                    }));
-                    results.unshift(verifiedVideo); // Adds Hanuman Chalisa at top
+                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    setCache(query, results);
+                    return results;
+                } else { return []; }
+            })
+            .catch(() => []);
+    }
+
+    function fetchVideos(query) {
+        currentQuery = query;
+        nextPageToken = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        saveHistory(query);
+        let cached = getCached(query);
+        if (cached && cached.length > 0) {
+            renderVideos(cached);
+            return;
+        }
+        if (!checkQuota()) { showQuotaTimer(); return; }
+        incrementQuota();
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=20`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    nextPageToken = data.nextPageToken;
+                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    setCache(query, results);
                     renderVideos(results);
                 } else {
-                    renderVideos([verifiedVideo]);
+                    container.innerHTML = `<p style="text-align:center; padding:50px;">कोई भक्ति वीडियो नहीं मिला।</p>`;
                 }
             })
-            .catch(err => {
-                console.error("API Error:", err);
-                renderVideos([verifiedVideo]);
+            .catch(() => {
+                container.innerHTML = `<p style="text-align:center; padding:50px;">नेटवर्क त्रुटि! कृपया पुनः प्रयास करें।</p>`;
             });
     }
 
     function renderVideos(videos) {
         container.innerHTML = '';
+        loadMoreContainer.innerHTML = '';
         if (videos.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🕉️ कोई भक्ति वीडियो नहीं मिला।</p>`;
             return;
         }
         videos.forEach(video => {
             const card = document.createElement('div');
             card.className = 'video-card';
             card.innerHTML = `
-                <div class="video-thumb" onclick="playVideo(this, '${video.videoId}')">
+                <div class="video-thumb" onclick="playVideo('${video.videoId}')">
                     <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
                     <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
                 </div>
-                <div class="video-player"></div>
                 <div class="video-info">
                     <div class="video-title">${video.title}</div>
-                    <div class="video-meta"><i class="fas fa-user-circle"></i> <span class="channel">${video.channel}</span></div>
+                    <div class="video-meta"><span class="channel" style="color:#D32F2F; font-weight:600;">${video.channel}</span></div>
                 </div>`;
             container.appendChild(card);
         });
+        if (nextPageToken) {
+            const btn = document.createElement('button');
+            btn.className = 'load-more-btn';
+            btn.innerText = "और वीडियो देखें (Load More)";
+            btn.onclick = loadMoreVideos;
+            loadMoreContainer.appendChild(btn);
+        }
     }
 
-    function playVideo(thumbElement, videoId) {
-        const cards = document.querySelectorAll('.video-card');
-        cards.forEach(card => {
-            card.classList.remove('playing');
-            const player = card.querySelector('.video-player');
-            if (player) player.innerHTML = '';
-        });
-
-        const card = thumbElement.closest('.video-card');
-        card.classList.add('playing');
-        const player = card.querySelector('.video-player');
-        player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    function loadMoreVideos() {
+        if (!nextPageToken) return;
+        if (!checkQuota()) { showQuotaTimer(); return; }
+        incrementQuota();
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(currentQuery)}&key=${YOUTUBE_API_KEY}&maxResults=20&pageToken=${nextPageToken}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    nextPageToken = data.nextPageToken;
+                    const newResults = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    newResults.forEach(video => {
+                        const card = document.createElement('div');
+                        card.className = 'video-card';
+                        card.innerHTML = `
+                            <div class="video-thumb" onclick="playVideo('${video.videoId}')">
+                                <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
+                                <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
+                            </div>
+                            <div class="video-info">
+                                <div class="video-title">${video.title}</div>
+                                <div class="video-meta"><span class="channel" style="color:#D32F2F; font-weight:600;">${video.channel}</span></div>
+                            </div>`;
+                        container.appendChild(card);
+                    });
+                    loadMoreContainer.innerHTML = '';
+                    if (nextPageToken) {
+                        const btn = document.createElement('button');
+                        btn.className = 'load-more-btn';
+                        btn.innerText = "और वीडियो देखें (Load More)";
+                        btn.onclick = loadMoreVideos;
+                        loadMoreContainer.appendChild(btn);
+                    }
+                }
+            })
+            .catch(() => alert("API सीमा समाप्त!"));
     }
 
     function searchVideos() {
@@ -191,21 +421,32 @@
     }
 
     function voiceSearch() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च इस ब्राउज़र में सपोर्ट नहीं है। Chrome खोलें।'); return; }
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है। Chrome खोलें।'); return; }
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'hi-IN';
+        recognition.interimResults = true;
+        recognition.start();
         recognition.onresult = function(event) {
-            document.getElementById('searchInput').value = event.results[0][0].transcript;
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('searchInput').value = transcript;
             searchVideos();
         };
-        recognition.start();
+        recognition.onerror = function(event) {
+            if (event.error === 'not-allowed') {
+                alert("कृपया माइक्रोफ़ोन की अनुमति दें ताकि वॉइस सर्च चल सके।");
+            }
+        };
     }
 
     let counter = 0;
     function openMala() { document.getElementById('malaModal').classList.add('open'); }
     function closeMala() { document.getElementById('malaModal').classList.remove('open'); }
-    function incrementCounter() { counter++; document.getElementById('counterDisplay').textContent = counter; }
+    function incrementCounter() {
+        counter++;
+        document.getElementById('counterDisplay').textContent = counter;
+        playBellSound();
+    }
     function resetCounter() { counter = 0; document.getElementById('counterDisplay').textContent = counter; }
 
     function openCalendar() { document.getElementById('calendarModal').classList.add('open'); updateCalendar(); }
@@ -214,14 +455,13 @@
         const now = new Date();
         const months = ['चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ़', 'श्रावण', 'भाद्रपद', 'अश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन'];
         document.getElementById('calendarContent').innerHTML = `
-            <div class="main-date">${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}</div>
-            <div class="hindu-details">
+            <div style="font-size:1.3rem; font-weight:bold; margin-bottom:10px;">${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}</div>
+            <div style="text-align:left; font-size:0.9rem; line-height:1.8;">
                 <p><strong>विक्रम संवत्:</strong> ${now.getFullYear() + 57}</p>
-                <p><strong>आज का विशेष:</strong> <span class="special">🙏 आरती एवं पूजा करें</span></p>
+                <p><strong>आज का विशेष:</strong> <span style="color:#E65100; font-weight:bold;">🙏 आरती एवं पूजा करें</span></p>
             </div>`;
     }
 
-    // Load random content on start
     goHome();
 </script>
 </body>
