@@ -98,29 +98,39 @@
     // ⚠️ YOUR YOUTUBE API KEY IS INTEGRATED HERE ⚠️
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
 
-    // 13 Verified 100% Working Offline Videos
-    const videoList = [
-        { title: "🚩 हनुमान चालीसा - फास्ट", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स", god: "hanuman" },
-        { title: "🚩 बजरंग बाण", videoId: "tQzCnMI4jNc", channel: "हनुमान भक्ति", god: "hanuman" },
-        { title: "🕉️ ॐ नमः शिवाय - महामंत्र", videoId: "Xb8D1ZYwVWU", channel: "भक्ति ब्लिस", god: "shiv" },
-        { title: "🔱 शिव तांडव स्तोत्र", videoId: "jdy0GgMbJY0", channel: "दिव्य मंत्र", god: "shiv" },
-        { title: "💫 महामृत्युंजय मंत्र 108", videoId: "HfACrKJ_Y2w", channel: "आध्यात्मिक हब", god: "shiv" },
-        { title: "🎶 हरे कृष्ण महामंत्र", videoId: "Yocja_N5s1I", channel: "इस्कॉन", god: "krishna" },
-        { title: "🦚 राधा कृष्ण - मधुराष्टकम्", videoId: "L9e2DZ3xN4g", channel: "बृज भक्ति", god: "radha" },
-        { title: "🛕 गणेश आरती", videoId: "zgFhFvVh1f0", channel: "भक्ति लोक", god: "ganesh" },
-        { title: "🙏 दुर्गा चालीसा", videoId: "MkD9v8-2QoE", channel: "देवी भक्ति", god: "durga" },
-        { title: "🔥 माँ काली भजन", videoId: "e2qEw7t3EAs", channel: "शक्ति भक्ति", god: "kali" },
-        { title: "🪔 साईं बाबा भजन", videoId: "y_08K-zYq1U", channel: "साईं भक्ति", god: "saibaba" },
-        { title: "👑 वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति", god: "vishnu" },
-        { title: "🪐 शनि चालीसा", videoId: "MRjXTzDkF8k", channel: "नवग्रह भक्ति", god: "shani" }
-    ];
-
     const container = document.getElementById('videoContainer');
-    let allVideos = videoList;
+    
+    // The only 100% verified video (Hanuman Chalisa Fast)
+    const verifiedVideo = { title: "🚩 हनुमान चालीसा - फास्ट", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" };
 
+    // Load Home Screen with Real Search Results (Uses your Free API)
     function goHome() {
         document.getElementById('searchInput').value = '';
-        renderVideos(allVideos);
+        // Fetch top searches to fill home screen
+        fetchVideos("हनुमान चालीसा भक्ति");
+    }
+
+    function fetchVideos(query) {
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=30`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    // Prepend the guaranteed working video so they always see it
+                    const results = data.items.map(item => ({
+                        title: item.snippet.title,
+                        videoId: item.id.videoId,
+                        channel: item.snippet.channelTitle
+                    }));
+                    results.unshift(verifiedVideo); // Adds Hanuman Chalisa at top
+                    renderVideos(results);
+                } else {
+                    renderVideos([verifiedVideo]);
+                }
+            })
+            .catch(err => {
+                console.error("API Error:", err);
+                renderVideos([verifiedVideo]);
+            });
     }
 
     function renderVideos(videos) {
@@ -165,31 +175,10 @@
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         
         // If no query, just show local videos
-        if (!query) { renderVideos(videoList); return; }
+        if (!query) { goHome(); return; }
 
         // Use YouTube API to get 30+ REAL videos
-        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query + " भक्ति")}&key=${YOUTUBE_API_KEY}&maxResults=30`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.items && data.items.length > 0) {
-                    const results = data.items.map(item => ({
-                        title: item.snippet.title,
-                        videoId: item.id.videoId,
-                        channel: item.snippet.channelTitle
-                    }));
-                    renderVideos(results);
-                } else {
-                    // Fallback to local videos if API has no results
-                    const filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query) || v.god.includes(query));
-                    renderVideos(filtered);
-                }
-            })
-            .catch(err => {
-                console.error("API Error:", err);
-                // Fallback to local videos if API fails
-                const filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query) || v.god.includes(query));
-                renderVideos(filtered);
-            });
+        fetchVideos(query);
     }
 
     function voiceSearch() {
@@ -223,7 +212,8 @@
             </div>`;
     }
 
-    renderVideos(videoList);
+    // Start with API loaded home feed
+    goHome();
 </script>
 </body>
 </html>
