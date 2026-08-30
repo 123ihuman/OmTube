@@ -13,18 +13,23 @@
         ::-webkit-scrollbar-track { background: #FFE0B2; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #D32F2F, #FFB300); border-radius: 10px; }
 
-        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 60px; background: linear-gradient(90deg, #D32F2F, #E65100); border-bottom: 4px solid #FFD700; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 56px; background: linear-gradient(90deg, #D32F2F, #E65100); border-bottom: 4px solid #FFD700; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
         .logo { font-size: 1.4rem; font-weight: 800; color: #FFD700; display: flex; align-items: center; gap: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .logo i { font-size: 1.8rem; color: #FFFFFF; }
         .logo span { color: #FFFFFF; }
 
         .header-center { flex: 1; display: flex; align-items: center; max-width: 600px; margin: 0 8px; background: #FFFFFF; border-radius: 40px; border: 2px solid #FFD700; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header-center input { flex: 1; background: transparent; border: none; padding: 8px 12px; color: #3E2723; font-size: 0.9rem; outline: none; font-weight: 500; }
+        .header-center input { flex: 1; background: transparent; border: none; padding: 6px 12px; color: #3E2723; font-size: 0.9rem; outline: none; font-weight: 500; }
         .header-center button { background: transparent; border: none; color: #D32F2F; padding: 0 10px; cursor: pointer; font-size: 1.1rem; }
 
         .header-right { display: flex; gap: 5px; flex-shrink: 0; }
-        .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1rem; }
+        .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 1rem; }
         .icon-btn:hover { background: #FFD700; color: #D32F2F; }
+
+        /* Developer Bar */
+        .developer-bar { background: #FFF8F0; text-align: center; padding: 6px 10px; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #FFE0B2; color: #5D4037; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .developer-bar span { color: #D32F2F; }
+        .developer-bar a { color: #E65100; text-decoration: none; font-weight: 700; }
 
         .video-container { max-width: 600px; margin: 0 auto; padding: 10px; display: flex; flex-direction: column; gap: 20px; }
         .video-card { background: #FFFFFF; border-radius: 16px; overflow: hidden; transition: 0.3s; border: 2px solid #FFE0B2; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
@@ -72,6 +77,11 @@
     </div>
 </header>
 
+<!-- Developer Info Bar -->
+<div class="developer-bar">
+    <i class="fas fa-code"></i> <span>Developer:</span> <strong style="color:#D32F2F;">DIVY</strong> | <a href="tel:9369224174"><i class="fas fa-phone"></i> 9369224174</a>
+</div>
+
 <div class="video-container" id="videoContainer"></div>
 
 <div class="mala-modal" id="malaModal">
@@ -95,19 +105,24 @@
 </div>
 
 <script>
-    // ⚠️ YOUR YOUTUBE API KEY IS INTEGRATED HERE ⚠️
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
-
     const container = document.getElementById('videoContainer');
-    
-    // The only 100% verified video (Hanuman Chalisa Fast)
+
+    // Verified Video (Always works)
     const verifiedVideo = { title: "🚩 हनुमान चालीसा - फास्ट", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" };
 
-    // Load Home Screen with Real Search Results (Uses your Free API)
+    // Random Bhakti Queries for Home Screen
+    const homeQueries = [
+        "शिव भक्ति", "दुर्गा माता भजन", "राधा कृष्ण भजन", "राम भजन", 
+        "काली माता भजन", "गणेश भक्ति", "विष्णु भजन", "साईं बाबा भजन", 
+        "हनुमान चालीसा", "सुंदरकांड पाठ"
+    ];
+
     function goHome() {
         document.getElementById('searchInput').value = '';
-        // Fetch top searches to fill home screen
-        fetchVideos("हनुमान चालीसा भक्ति");
+        // Pick a random query
+        let randomQuery = homeQueries[Math.floor(Math.random() * homeQueries.length)];
+        fetchVideos(randomQuery);
     }
 
     function fetchVideos(query) {
@@ -115,7 +130,6 @@
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
-                    // Prepend the guaranteed working video so they always see it
                     const results = data.items.map(item => ({
                         title: item.snippet.title,
                         videoId: item.id.videoId,
@@ -156,7 +170,6 @@
         });
     }
 
-    // Strictly stop all other videos before playing
     function playVideo(thumbElement, videoId) {
         const cards = document.querySelectorAll('.video-card');
         cards.forEach(card => {
@@ -173,11 +186,7 @@
 
     function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        
-        // If no query, just show local videos
         if (!query) { goHome(); return; }
-
-        // Use YouTube API to get 30+ REAL videos
         fetchVideos(query);
     }
 
@@ -212,7 +221,7 @@
             </div>`;
     }
 
-    // Start with API loaded home feed
+    // Load random content on start
     goHome();
 </script>
 </body>
