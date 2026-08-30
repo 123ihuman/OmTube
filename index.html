@@ -32,13 +32,11 @@
         .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #FFF3E0; overflow: hidden; cursor: pointer; }
         .video-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         .video-thumb .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(211,47,47,0.3); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #FFD700; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        .video-card:hover .video-thumb .play-overlay { background: rgba(211,47,47,0.5); }
 
         .video-player { display: none; width: 100%; padding-top: 56.25%; position: relative; background: #000; }
         .video-player iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         .video-card.playing .video-thumb { display: none; }
         .video-card.playing .video-player { display: block; }
-        .video-card.playing { border-color: #D32F2F; box-shadow: 0 0 0 3px #FFD700, 0 12px 28px rgba(211,47,47,0.25); }
 
         .video-info { padding: 12px 14px; }
         .video-title { font-size: 1rem; font-weight: 700; color: #3E2723; line-height: 1.3; }
@@ -63,7 +61,7 @@
 <header class="header">
     <div class="logo"><i class="fas fa-om"></i><span>भक्ति ट्यूब</span></div>
     <div class="header-center">
-        <input type="text" id="searchInput" placeholder="भक्ति खोजें (जैसे: ह, शि, कृ)..." onkeyup="searchVideos()">
+        <input type="text" id="searchInput" placeholder="भक्ति खोजें (जैसे: शिव, हनुमान)..." onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
@@ -97,7 +95,10 @@
 </div>
 
 <script>
-    // THE ONLY VERIFIED VIDEO LIST (All 13 are 100% working)
+    // ⚠️ PASTE YOUR YOUTUBE API KEY BELOW (Replace with your actual key) ⚠️
+    const YOUTUBE_API_KEY = "PASTE_YOUR_API_KEY_HERE";
+
+    // 13 Verified 100% Working Offline Videos
     const videoList = [
         { title: "🚩 हनुमान चालीसा - फास्ट", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स", god: "hanuman" },
         { title: "🚩 बजरंग बाण", videoId: "tQzCnMI4jNc", channel: "हनुमान भक्ति", god: "hanuman" },
@@ -114,28 +115,18 @@
         { title: "🪐 शनि चालीसा", videoId: "MRjXTzDkF8k", channel: "नवग्रह भक्ति", god: "shani" }
     ];
 
-    const godMap = {
-        "ha": ["hanuman"], "han": ["hanuman"], "bajarang": ["hanuman"],
-        "sh": ["shiv", "shani"], "shi": ["shiv"],
-        "kr": ["krishna"], "kri": ["krishna"],
-        "du": ["durga"], "dur": ["durga"],
-        "ka": ["kali"], "kal": ["kali"],
-        "ga": ["ganesh"], "gan": ["ganesh"],
-        "vish": ["vishnu"], "sa": ["saibaba"], "sai": ["saibaba"],
-        "rad": ["radha"], "maham": ["shiv"], "om": ["shiv"]
-    };
-
     const container = document.getElementById('videoContainer');
+    let allVideos = videoList;
 
     function goHome() {
         document.getElementById('searchInput').value = '';
-        renderVideos(videoList);
+        renderVideos(allVideos);
     }
 
     function renderVideos(videos) {
         container.innerHTML = '';
         if (videos.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला। "ह" या "शि" टाइप करें।</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`;
             return;
         }
         videos.forEach(video => {
@@ -155,7 +146,6 @@
         });
     }
 
-    // Strictly stop all other videos before playing
     function playVideo(thumbElement, videoId) {
         const cards = document.querySelectorAll('.video-card');
         cards.forEach(card => {
@@ -167,31 +157,42 @@
         const card = thumbElement.closest('.video-card');
         card.classList.add('playing');
         const player = card.querySelector('.video-player');
-        // This URL format is 100% safe for GitHub Pages
         player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     }
 
     function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        if (!query) { renderVideos(videoList); return; }
-
-        let godKeys = [];
-        for (let key in godMap) {
-            if (query.startsWith(key) || key.startsWith(query)) { godKeys = godKeys.concat(godMap[key]); }
-        }
         
-        let filtered = [];
-        if (godKeys.length > 0) {
-            filtered = videoList.filter(v => godKeys.includes(v.god));
-        } else {
-            filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query) || v.god.includes(query));
-        }
-
-        if (filtered.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 "${query}" के लिए कुछ नहीं मिला।</p>`;
+        // If no API key, just search local videos
+        if (YOUTUBE_API_KEY === "PASTE_YOUR_API_KEY_HERE") {
+            if (!query) { renderVideos(videoList); return; }
+            const filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query) || v.god.includes(query));
+            renderVideos(filtered);
             return;
         }
-        renderVideos(filtered);
+
+        // If API key is present, search YouTube for real 30+ videos
+        if (!query) { renderVideos(videoList); return; }
+
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query + " भक्ति")}&key=${YOUTUBE_API_KEY}&maxResults=30`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    // Map real YouTube data to our UI
+                    const results = data.items.map(item => ({
+                        title: item.snippet.title.replace(/[^\u0900-\u097F\w\s]/g, ''), // Clean special chars
+                        videoId: item.id.videoId,
+                        channel: item.snippet.channelTitle
+                    }));
+                    renderVideos(results);
+                } else {
+                    container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 ${query} के लिए कोई भक्ति वीडियो नहीं मिला।</p>`;
+                }
+            })
+            .catch(err => {
+                console.error("API Error:", err);
+                alert("YouTube API Error! प्लीज़ अपना API Key चेक करें।");
+            });
     }
 
     function voiceSearch() {
