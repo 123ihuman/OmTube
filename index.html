@@ -18,7 +18,6 @@
         body.dark-mode { background: #202124; color: #e8eaed; }
         body.dark-mode .video-card { background: #303134; border-color: #5f6368; }
         
-        /* Thin Saffron Strips */
         body::before, body::after { content: ""; position: fixed; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #D32F2F, #E65100, #FF9933); z-index: 999; }
         body::before { left: 0; }
         body::after { right: 0; }
@@ -62,13 +61,13 @@
         .video-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
         .video-meta { font-size: 0.85rem; margin-top: 6px; display: flex; justify-content: space-between; }
 
-        /* ✅ CHANGED: Half-screen Mini Player from top to middle */
+        /* FIXED: Player takes up 80% of screen (almost to bottom) */
         .mini-player {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 45vh; /* Top half of the screen */
+            height: 80vh; 
             background: #000;
             z-index: 9999;
             display: none;
@@ -147,7 +146,7 @@
 <div class="video-container" id="videoContainer"></div>
 <div id="loadMoreContainer" style="text-align:center; padding: 20px;"></div>
 
-<!-- ✅ CHANGED: Half-screen Mini Player -->
+<!-- FIXED: 80% Screen Mini Player -->
 <div class="mini-player" id="miniPlayer">
     <button class="close-mini-player" onclick="closeMiniPlayer()">✕</button>
     <div id="miniContent"></div>
@@ -202,6 +201,14 @@
 
     let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
     let lastResetDate = localStorage.getItem('bhakti_api_reset');
+    let homeRefreshCount = 0; // Counter for Home button
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
 
     function checkQuota() {
         const now = new Date();
@@ -283,10 +290,18 @@
         }
     }
 
+    // FIXED: Rotates New Videos every 3rd refresh, Shuffles old ones otherwise
     function goHome() {
         document.getElementById('searchInput').value = '';
+        homeRefreshCount++;
         let randomQuery = commonSearches[Math.floor(Math.random() * commonSearches.length)];
-        fetchVideos(randomQuery);
+
+        // Every 3rd time, force a fresh fetch (only if quota is available)
+        if (homeRefreshCount % 3 === 0 && checkQuota()) {
+            fetchVideos(randomQuery, true); // forceFresh = true
+        } else {
+            fetchVideos(randomQuery); // Uses cache and shuffles
+        }
     }
 
     function toggleDarkMode() {
@@ -316,14 +331,13 @@
         } catch(e) {}
     }
 
-    // ✅ CHANGED: Opens in Half-Screen Mini Player
+    // Plays in the 80% screen player. Clicking the YouTube expand button goes to 100% fullscreen.
     function playVideo(videoId) {
         const player = document.getElementById('miniPlayer');
         player.classList.add('open');
         document.getElementById('miniContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     }
 
-    // ✅ CHANGED: Closes Mini Player
     function closeMiniPlayer() {
         const player = document.getElementById('miniPlayer');
         player.classList.remove('open');
@@ -349,14 +363,17 @@
             .catch(() => []);
     }
 
-    function fetchVideos(query) {
+    // FIXED: Added forceFresh parameter
+    function fetchVideos(query, forceFresh = false) {
         currentQuery = query;
         nextPageToken = '';
         window.scrollTo({ top: 0, behavior: 'smooth' });
         saveHistory(query);
 
         let cached = getCached(query);
-        if (cached && cached.length > 0) {
+        // If not forcing fresh, use cache but SHUFFLE it so it looks new
+        if (cached && cached.length > 0 && !forceFresh) {
+            shuffleArray(cached);
             renderVideos(cached);
             return;
         }
