@@ -7,36 +7,23 @@
     <title>भक्ति ट्यूब</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        :root {
-            --bg-color: #FFF8F0;
-            --text-color: #3E2723;
-            --card-bg: #FFFFFF;
-            --gold: #FFD700;
-            --saffron: #FF9933;
-        }
+        :root { --bg-color: #FFF8F0; --text-color: #3E2723; --card-bg: #FFFFFF; --gold: #FFD700; --saffron: #FF9933; }
         body { font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; overflow-x: hidden; }
         body.dark-mode { background: #202124; color: #e8eaed; }
         body.dark-mode .video-card { background: #303134; border-color: #5f6368; }
-        
         body::before, body::after { content: ""; position: fixed; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #D32F2F, #E65100, #FF9933); z-index: 999; }
-        body::before { left: 0; }
-        body::after { right: 0; }
-
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        body::before { left: 0; } body::after { right: 0; }
+        ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-track { background: var(--bg-color); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #D32F2F, #FFB300); border-radius: 10px; }
 
         .header { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; height: 56px; background: linear-gradient(90deg, #D32F2F, #E65100); border-bottom: 4px solid #FFD700; position: sticky; top: 0; z-index: 100; }
-        
         .logo { font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
         .logo i { font-size: 1.4rem; background: linear-gradient(45deg, #FFD700, #FFFFFF, #FFA500); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .logo span { background: linear-gradient(45deg, #FFD700, #FFFFFF); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-
         .header-left { display: flex; align-items: center; gap: 5px; }
         .header-center { flex: 1; display: flex; align-items: center; max-width: 600px; margin: 0 5px; background: #FFFFFF; border-radius: 40px; border: 2px solid #FFD700; }
         .header-center input { flex: 1; background: transparent; border: none; padding: 6px 10px; color: #3E2723; font-size: 0.9rem; outline: none; font-weight: 500; }
         .header-center button { background: transparent; border: none; color: #D32F2F; padding: 0 8px; cursor: pointer; font-size: 1rem; }
-
         .header-right { display: flex; gap: 5px; flex-shrink: 0; align-items: center; }
         .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         .icon-btn:hover { background: #FFD700; color: #D32F2F; }
@@ -61,33 +48,10 @@
         .video-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
         .video-meta { font-size: 0.85rem; margin-top: 6px; display: flex; justify-content: space-between; }
 
-        /* FIXED: Player takes up 80% of screen (almost to bottom) */
-        .mini-player {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 80vh; 
-            background: #000;
-            z-index: 9999;
-            display: none;
-        }
-        .mini-player.open { display: block; }
-        .mini-player iframe { width: 100%; height: 100%; border: none; }
-        .close-mini-player {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #fff;
-            border: none;
-            font-size: 24px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 10001;
-        }
+        .mini-player { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; }
+        .mini-player.open { display: flex; }
+        .mini-player iframe { width: 100vw; height: 56.25vw; border: none; }
+        .close-mini-player { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: #fff; border: none; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 10001; }
 
         .load-more-btn { width: 100%; padding: 15px; background: #D32F2F; color: white; font-size: 1.1rem; border: none; cursor: pointer; margin-top: 20px; border-radius: 10px; }
         .load-more-btn:hover { background: #E65100; }
@@ -102,7 +66,6 @@
         .controls button.primary { background: #D32F2F; color: #FFFFFF; }
 
         .quota-timer { text-align: center; padding: 30px; font-size: 1.2rem; border: 2px dashed #D32F2F; border-radius: 10px; margin: 20px 0; color: #D32F2F; }
-        .quota-warning { text-align: center; padding: 15px; font-size: 1rem; background: #FFF3E0; border: 2px solid #E65100; border-radius: 10px; margin-bottom: 20px; color: #E65100; }
     </style>
 </head>
 <body>
@@ -146,10 +109,9 @@
 <div class="video-container" id="videoContainer"></div>
 <div id="loadMoreContainer" style="text-align:center; padding: 20px;"></div>
 
-<!-- FIXED: 80% Screen Mini Player -->
 <div class="mini-player" id="miniPlayer">
     <button class="close-mini-player" onclick="closeMiniPlayer()">✕</button>
-    <div id="miniContent"></div>
+    <div id="miniContent" style="width:100vw; height:56.25vw;"></div>
 </div>
 
 <div class="mala-modal" id="malaModal">
@@ -201,7 +163,7 @@
 
     let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
     let lastResetDate = localStorage.getItem('bhakti_api_reset');
-    let homeRefreshCount = 0; // Counter for Home button
+    let homeRefreshCount = 0;
 
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -290,17 +252,15 @@
         }
     }
 
-    // FIXED: Rotates New Videos every 3rd refresh, Shuffles old ones otherwise
     function goHome() {
         document.getElementById('searchInput').value = '';
         homeRefreshCount++;
         let randomQuery = commonSearches[Math.floor(Math.random() * commonSearches.length)];
 
-        // Every 3rd time, force a fresh fetch (only if quota is available)
         if (homeRefreshCount % 3 === 0 && checkQuota()) {
-            fetchVideos(randomQuery, true); // forceFresh = true
+            fetchVideos(randomQuery, true);
         } else {
-            fetchVideos(randomQuery); // Uses cache and shuffles
+            fetchVideos(randomQuery);
         }
     }
 
@@ -309,11 +269,27 @@
         toggleDrawer();
     }
 
+    // ✅ UPDATED: Confirmation before exit
     function exitApp() {
         toggleDrawer();
         playBellSound();
-        alert("धन्यवाद! पुनः आएं!");
+        
+        const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
+        
+        if (isConfirmed) {
+            alert("धन्यवाद! पुनः आएं!");
+            window.close();
+        } else {
+            // User clicked Cancel, stay on the app
+        }
     }
+
+    // ✅ ADDED: Prevent accidental closing of tab/back button
+    window.addEventListener('beforeunload', function (e) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+    });
 
     function playBellSound() {
         try {
@@ -331,11 +307,10 @@
         } catch(e) {}
     }
 
-    // Plays in the 80% screen player. Clicking the YouTube expand button goes to 100% fullscreen.
     function playVideo(videoId) {
         const player = document.getElementById('miniPlayer');
         player.classList.add('open');
-        document.getElementById('miniContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        document.getElementById('miniContent').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     }
 
     function closeMiniPlayer() {
@@ -347,10 +322,8 @@
     function fetchYouTubeVideos(query) {
         let cached = getCached(query);
         if (cached) return Promise.resolve(cached);
-        
         if (!checkQuota()) return Promise.resolve([]);
         incrementQuota();
-
         return fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=10`)
             .then(res => res.json())
             .then(data => {
@@ -363,7 +336,6 @@
             .catch(() => []);
     }
 
-    // FIXED: Added forceFresh parameter
     function fetchVideos(query, forceFresh = false) {
         currentQuery = query;
         nextPageToken = '';
@@ -371,7 +343,6 @@
         saveHistory(query);
 
         let cached = getCached(query);
-        // If not forcing fresh, use cache but SHUFFLE it so it looks new
         if (cached && cached.length > 0 && !forceFresh) {
             shuffleArray(cached);
             renderVideos(cached);
@@ -405,12 +376,7 @@
     function renderVideos(videos) {
         container.innerHTML = '';
         loadMoreContainer.innerHTML = '';
-        
-        if (videos.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`;
-            return;
-        }
-        
+        if (videos.length === 0) { container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`; return; }
         videos.forEach(video => {
             const card = document.createElement('div');
             card.className = 'video-card';
@@ -425,7 +391,6 @@
                 </div>`;
             container.appendChild(card);
         });
-
         if (nextPageToken) {
             const btn = document.createElement('button');
             btn.className = 'load-more-btn';
@@ -439,14 +404,12 @@
         if (!nextPageToken) return;
         if (!checkQuota()) { showQuotaTimer(); return; }
         incrementQuota();
-        
         fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(currentQuery)}&key=${YOUTUBE_API_KEY}&maxResults=20&pageToken=${nextPageToken}`)
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
                     nextPageToken = data.nextPageToken;
                     const newResults = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
-                    
                     newResults.forEach(video => {
                         const card = document.createElement('div');
                         card.className = 'video-card';
@@ -461,7 +424,6 @@
                             </div>`;
                         container.appendChild(card);
                     });
-
                     loadMoreContainer.innerHTML = '';
                     if (nextPageToken) {
                         const btn = document.createElement('button');
@@ -494,9 +456,7 @@
             searchVideos();
         };
         recognition.onerror = function(event) {
-            if (event.error === 'not-allowed') {
-                alert("कृपया माइक्रोफ़ोन की अनुमति दें ताकि वॉइस सर्च चल सके।");
-            }
+            if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें।"); }
         };
     }
 
