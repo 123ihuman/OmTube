@@ -32,6 +32,10 @@
         .developer-bar { background: var(--bg-color); text-align: center; padding: 3px 10px; font-size: 0.7rem; font-weight: 700; border-bottom: 1px solid #FFE0B2; }
         .dev-text { background: linear-gradient(90deg, #D32F2F, #E65100, #FFB300); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 10001; display: none; }
+        .toast.show { display: block; animation: fadeInOut 3s; }
+        @keyframes fadeInOut { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
         .drawer { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: var(--card-bg); z-index: 999; box-shadow: 4px 0 20px rgba(0,0,0,0.3); transform: translateX(-100%); transition: transform 0.3s; padding-bottom: 10px; overflow-y: auto; border-right: 4px solid #FFD700; }
         .drawer.open { transform: translateX(0); }
@@ -54,6 +58,11 @@
         .video-wrapper:fullscreen { width: 100vw; height: 100vh; }
         .video-wrapper:fullscreen iframe { width: 100%; height: 100%; }
 
+        .video-wrapper.audio-only iframe { opacity: 0; pointer-events: none; }
+        .video-wrapper.audio-only { background: #000; }
+        .audio-indicator { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; font-size: 12px; font-weight: bold; display: none; }
+        .video-wrapper.audio-only .audio-indicator { display: block; }
+
         .mini-controls { position: absolute; top: 5px; right: 5px; z-index: 10001; display: flex; gap: 5px; }
         .mini-btn { background: rgba(0,0,0,0.7); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
         .mini-btn:hover { background: #D32F2F; }
@@ -74,6 +83,8 @@
     </style>
 </head>
 <body>
+
+<div class="toast" id="toast"></div>
 
 <header class="header">
     <div class="header-left">
@@ -117,10 +128,13 @@
 
 <div class="video-wrapper" id="videoWrapper">
     <div class="mini-controls">
+        <!-- Removed Download Button -->
+        <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
         <button class="mini-btn" onclick="toggleVideoFullscreen()" title="फुल स्क्रीन" id="fsBtn"><i class="fas fa-expand"></i></button>
         <button class="mini-btn" onclick="closeMiniPlayer()" title="बंद करें"><i class="fas fa-times"></i></button>
     </div>
     <div id="videoContent" style="width:100%; height:100%;"></div>
+    <div class="audio-indicator">🎧 ऑडियो मोड सक्रिय</div>
 </div>
 
 <div class="mala-modal" id="malaModal">
@@ -158,7 +172,7 @@
     const container = document.getElementById('videoContainer');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    // THE MASTER CACHE (100% UNLIMITED PLAYBACK)
+    // Master Cache
     const seedVideos = [
         { title: "हनुमान चालीसा (Fast)", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" },
         { title: "शिव तांडव स्तोत्र", videoId: "jdy0GgMbJY0", channel: "दिव्य मंत्र" },
@@ -172,10 +186,7 @@
         { title: "साईं बाबा भजन", videoId: "y_08K-zYq1U", channel: "साईं भक्ति" },
         { title: "माँ काली भजन", videoId: "e2qEw7t3EAs", channel: "शक्ति भक्ति" },
         { title: "शनि चालीसा", videoId: "MRjXTzDkF8k", channel: "नवग्रह भक्ति" },
-        { title: "वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति" },
-        { title: "संपूर्ण आरती संग्रह", videoId: "zgFhFvVh1f0", channel: "भक्ति लोक" },
-        { title: "गुलशन कुमार शिव भजन", videoId: "jdy0GgMbJY0", channel: "दिव्य मंत्र" },
-        { title: "श्री राम चालीसा", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" }
+        { title: "वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति" }
     ];
 
     const commonSearches = [
@@ -190,20 +201,22 @@
         "भक्ति फिल्म", "जय गणेश", "जय दुर्गा", "जय कृष्ण", "जय शिव", "जय हनुमान", "जय माता दी"
     ];
 
-    // 100% UNLIMITED PLAYBACK: Only 10 API searches per day, rest is cache!
     let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
     let lastResetDate = localStorage.getItem('bhakti_api_reset');
     let homeRefreshCount = 0;
 
-    // Ask permission to store cache (Small KB)
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
     function requestStoragePermission() {
-        const confirmed = confirm("क्या आप इस ऐप को आपके डिवाइस पर छोटी सी जगह (कुछ KB) स्टोर करने की अनुमति देते हैं?\n\nइससे आप बिना इंटरनेट खोज के भी सारे वीडियो पूरे दिन बिना किसी लिमिट के चला पाएंगे!");
-        if (confirmed) {
-            alert("धन्यवाद! अब आपका कैश सक्रिय है। पूरे दिन वीडियो चल सकते हैं!");
-        } else {
-            alert("चिंता न करें, ऐप फिर भी काम करेगा, बस पहली बार में थोड़ा इंतज़ार करना पड़ सकता है।");
+        if (!localStorage.getItem('storagePermissionGranted')) {
+            showToast("Cache active for offline use");
+            localStorage.setItem('storagePermissionGranted', 'true');
         }
-        // Browser automatically handles storing it
     }
 
     function checkQuota() {
@@ -213,20 +226,12 @@
             localStorage.setItem('bhakti_api_count', '0');
             localStorage.setItem('bhakti_api_reset', now.toDateString());
         }
-        // MASSIVE SAVING: Only 10 API calls per day max! Rest uses cache
-        return apiCount < 10; 
+        return apiCount < 10; // Quota Saver
     }
 
     function incrementQuota() {
         apiCount++;
         localStorage.setItem('bhakti_api_count', apiCount.toString());
-    }
-
-    function getTimeUntilMidnight() {
-        const now = new Date();
-        const midnight = new Date(now);
-        midnight.setHours(24, 0, 0, 0);
-        return midnight - now;
     }
 
     function getCached(query) {
@@ -247,16 +252,13 @@
     function searchHistory() {
         toggleDrawer();
         let history = JSON.parse(localStorage.getItem('bhakti_history') || '[]');
-        if (history.length === 0) { alert("अभी तक कोई खोज नहीं हुई।"); return; }
+        if (history.length === 0) { showToast("अभी तक कोई खोज नहीं हुई"); return; }
         let str = "आपकी हाल की खोजें:\n";
         history.forEach((q, i) => { str += `${i+1}. ${q}\n`; });
         alert(str);
     }
 
     function showQuotaTimer() {
-        const timeLeft = getTimeUntilMidnight();
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
         const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
         renderVideos(fallback);
     }
@@ -298,11 +300,8 @@
     function exitApp() {
         toggleDrawer();
         playBellSound();
-        const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
-        if (isConfirmed) {
-            alert("धन्यवाद! पुनः आएं!");
-            window.close();
-        }
+        showToast("धन्यवाद! पुनः आएं!");
+        setTimeout(() => window.close(), 1000);
     }
 
     window.addEventListener('beforeunload', function (e) {
@@ -327,10 +326,14 @@
         } catch(e) {}
     }
 
+    let currentVideoId = "";
+
     function playVideo(videoId) {
+        currentVideoId = videoId;
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
         content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        wrapper.classList.remove('audio-only');
         wrapper.classList.add('open');
     }
 
@@ -339,7 +342,21 @@
         const content = document.getElementById('videoContent');
         if (document.fullscreenElement) { document.exitFullscreen(); }
         wrapper.classList.remove('open');
+        wrapper.classList.remove('audio-only');
         content.innerHTML = '';
+    }
+
+    function toggleAudioMode() {
+        const wrapper = document.getElementById('videoWrapper');
+        wrapper.classList.toggle('audio-only');
+        const audioBtn = document.querySelector('#audioBtn i');
+        if (wrapper.classList.contains('audio-only')) {
+            audioBtn.className = 'fas fa-video';
+            showToast("Audio mode ON");
+        } else {
+            audioBtn.className = 'fas fa-headphones';
+            showToast("Video mode ON");
+        }
     }
 
     function toggleVideoFullscreen() {
@@ -432,7 +449,6 @@
             container.appendChild(card);
         });
 
-        // ALWAYS SHOW LOAD MORE
         const btn = document.createElement('button');
         btn.className = 'load-more-btn';
         btn.innerText = "और वीडियो देखें (Load More)";
@@ -441,7 +457,6 @@
     }
 
     function loadMoreVideos() {
-        // Loads from the Master Cache - NO API COST!
         const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
         fallback.forEach(video => {
             const card = document.createElement('div');
@@ -466,7 +481,7 @@
     }
 
     function voiceSearch() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है। Chrome खोलें।'); return; }
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'hi-IN';
@@ -478,7 +493,7 @@
             searchVideos();
         };
         recognition.onerror = function(event) {
-            if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें।"); }
+            if (event.error === 'not-allowed') { showToast("कृपया माइक्रोफ़ोन की अनुमति दें"); }
         };
     }
 
@@ -505,9 +520,7 @@
             </div>`;
     }
 
-    // Ask for storage permission on first load
     requestStoragePermission();
-
     goHome();
 </script>
 </body>
