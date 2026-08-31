@@ -11,11 +11,14 @@
             --bg-color: #FFF8F0;
             --text-color: #3E2723;
             --card-bg: #FFFFFF;
+            --gold: #FFD700;
+            --saffron: #FF9933;
         }
         body { font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; overflow-x: hidden; }
         body.dark-mode { background: #202124; color: #e8eaed; }
         body.dark-mode .video-card { background: #303134; border-color: #5f6368; }
-
+        
+        /* Thin Saffron Strips */
         body::before, body::after { content: ""; position: fixed; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, #D32F2F, #E65100, #FF9933); z-index: 999; }
         body::before { left: 0; }
         body::after { right: 0; }
@@ -46,23 +49,46 @@
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
         .drawer { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: var(--card-bg); z-index: 999; box-shadow: 4px 0 20px rgba(0,0,0,0.3); transform: translateX(-100%); transition: transform 0.3s; padding-bottom: 10px; overflow-y: auto; border-right: 4px solid #FFD700; }
         .drawer.open { transform: translateX(0); }
-        .drawer-item { display: flex; align-items: center; gap: 15px; padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 1.05rem; color: #3E2723; }
+        .drawer-item { display: flex; align-items: center; gap: 15px; padding: 14px 20px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 1.05rem; color: var(--text-color); }
         .drawer-item:hover { background: #f1f3f4; }
         .drawer-item i { width: 24px; text-align: center; color: #D32F2F; }
 
         .video-container { width: 100%; max-width: none; margin: 10px auto; padding: 0 10px; display: flex; flex-direction: column; gap: 12px; }
         .video-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 2px solid #FFD700; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #FFF8F0; cursor: pointer; }
+        .video-thumb { position: relative; width: 100%; padding-top: 56.25%; background: #FFF3E0; cursor: pointer; }
         .video-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(211,47,47,0.3); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #FFD700; }
         .video-info { padding: 10px 14px; }
         .video-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
         .video-meta { font-size: 0.85rem; margin-top: 6px; display: flex; justify-content: space-between; }
 
-        .fullscreen-player { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: #000; display: none; }
-        .fullscreen-player.open { display: block; }
-        .fullscreen-player iframe { width: 100%; height: 100%; border: none; }
-        .close-player { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #FFF; border: none; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 10001; }
+        /* ✅ CHANGED: Half-screen Mini Player from top to middle */
+        .mini-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 45vh; /* Top half of the screen */
+            background: #000;
+            z-index: 9999;
+            display: none;
+        }
+        .mini-player.open { display: block; }
+        .mini-player iframe { width: 100%; height: 100%; border: none; }
+        .close-mini-player {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10001;
+        }
 
         .load-more-btn { width: 100%; padding: 15px; background: #D32F2F; color: white; font-size: 1.1rem; border: none; cursor: pointer; margin-top: 20px; border-radius: 10px; }
         .load-more-btn:hover { background: #E65100; }
@@ -77,6 +103,7 @@
         .controls button.primary { background: #D32F2F; color: #FFFFFF; }
 
         .quota-timer { text-align: center; padding: 30px; font-size: 1.2rem; border: 2px dashed #D32F2F; border-radius: 10px; margin: 20px 0; color: #D32F2F; }
+        .quota-warning { text-align: center; padding: 15px; font-size: 1rem; background: #FFF3E0; border: 2px solid #E65100; border-radius: 10px; margin-bottom: 20px; color: #E65100; }
     </style>
 </head>
 <body>
@@ -87,12 +114,11 @@
         <div class="menu-btn" onclick="toggleDrawer()">⋮</div>
     </div>
     <div class="header-center">
-        <input type="text" id="searchInput" placeholder="भक्ति खोजें (शिव, हनुमान, कथा)..." onkeyup="searchVideos()">
+        <input type="text" id="searchInput" placeholder="भक्ति खोजें..." onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
     <div class="header-right">
-        <button class="icon-btn" onclick="toggleFullscreen()" title="फुल स्क्रीन"><i class="fas fa-expand"></i></button>
         <button class="icon-btn" onclick="goHome()" title="होम"><i class="fas fa-home"></i></button>
         <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
         <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
@@ -105,7 +131,7 @@
 
 <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-item" onclick="searchHistory()"><i class="fas fa-history"></i> खोज इतिहास</div>
+    <div class="drawer-item" onclick="searchHistory()"><i class="fas fa-history"></i> Search History</div>
     <div class="drawer-item" onclick="searchCategory('कथा')"><i class="fas fa-book-open"></i> कथा</div>
     <div class="drawer-item" onclick="searchCategory('आरती')"><i class="fas fa-hands-praying"></i> आरती</div>
     <div class="drawer-item" onclick="searchCategory('भक्ति भजन')"><i class="fas fa-music"></i> भक्ति गाने और भजन</div>
@@ -121,9 +147,10 @@
 <div class="video-container" id="videoContainer"></div>
 <div id="loadMoreContainer" style="text-align:center; padding: 20px;"></div>
 
-<div class="fullscreen-player" id="fullscreenPlayer">
-    <button class="close-player" onclick="closeFullscreen()">✕</button>
-    <div id="fullscreenContent"></div>
+<!-- ✅ CHANGED: Half-screen Mini Player -->
+<div class="mini-player" id="miniPlayer">
+    <button class="close-mini-player" onclick="closeMiniPlayer()">✕</button>
+    <div id="miniContent"></div>
 </div>
 
 <div class="mala-modal" id="malaModal">
@@ -162,8 +189,15 @@
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
     const commonSearches = [
-        "प्रेमानंद महाराज कथा", "बागेश्वर बाबा", "जया किशोरी", "अनिरुद्धाचार्य कथा", "राजन जी कथा",
-        "आरती", "भक्ति भजन", "शिव भजन", "दुर्गा चालीसा", "हनुमान चालीसा", "श्री कृष्ण लीला", "महाभारत"
+        "हनुमान चालीसा", "शिव भजन", "दुर्गा चालीसा", "कृष्ण भजन", "गणेश आरती", "राम चालीसा", "सुंदरकांड", 
+        "भागवत कथा", "श्री राम कथा", "महाभारत", "भगवद गीता", "राधा कृष्ण", "काली माता", "साईं बाबा", 
+        "विष्णु सहस्रनाम", "शनि चालीसा", "लक्ष्मी आरती", "सरस्वती वंदना", "नवरात्रि भजन", "जय श्री राम", 
+        "हरे कृष्ण", "ॐ नमः शिवाय", "गायत्री मंत्र", "शांति मंत्र", "आरती संग्रह", "भक्ति गीत", 
+        "प्रेमानंद महाराज", "बागेश्वर बाबा", "जया किशोरी", "अनिरुद्धाचार्य", "राजन जी", 
+        "मीरा बाई भजन", "तुलसीदास", "कबीर दोहे", "देवी भजन", "गंगा आरती", "महाकाल भजन", 
+        "बजरंग बाण", "श्री गणेश मंत्र", "लक्ष्मी पूजा", "दुर्गा सप्तशती", "शिव तांडव", "कृष्ण लीला", 
+        "रामायण कथा", "महाभारत कथा", "भागवत कथा", "विष्णु पुराण", "शिव पुराण", "देवी पुराण", 
+        "भक्ति फिल्म", "जय गणेश", "जय दुर्गा", "जय कृष्ण", "जय शिव", "जय हनुमान", "जय माता दी"
     ];
 
     let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
@@ -219,7 +253,7 @@
         const timeLeft = getTimeUntilMidnight();
         const hours = Math.floor(timeLeft / (1000 * 60 * 60));
         const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        container.innerHTML = `<div class="quota-timer">🕉️ आज की नई खोज सीमा समाप्त!<br> नई खोजें <strong>${hours} घंटे ${minutes} मिनट</strong> बाद उपलब्ध होंगी।</div>`;
+        container.innerHTML = `<div class="quota-timer">🕉️ आज की नई खोज सीमा (100) समाप्त!<br> नई खोजें <strong>${hours} घंटे ${minutes} मिनट</strong> बाद उपलब्ध होंगी।<br> आपके पुराने खोज परिणाम अभी भी काम करेंगे!</div>`;
         loadMoreContainer.innerHTML = '';
     }
 
@@ -230,18 +264,11 @@
         overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
     }
 
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
-    }
-
     function searchCategory(category) {
         toggleDrawer();
         document.getElementById('searchInput').value = category;
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
         if (category === "कथा") {
             const kathas = ["प्रेमानंद महाराज कथा", "बागेश्वर बाबा कथा", "जया किशोरी कथा", "अनिरुद्धाचार्य कथा", "राजन जी कथा"];
             let allResults = [];
@@ -289,23 +316,27 @@
         } catch(e) {}
     }
 
+    // ✅ CHANGED: Opens in Half-Screen Mini Player
     function playVideo(videoId) {
-        const fsPlayer = document.getElementById('fullscreenPlayer');
-        fsPlayer.classList.add('open');
-        document.getElementById('fullscreenContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        const player = document.getElementById('miniPlayer');
+        player.classList.add('open');
+        document.getElementById('miniContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     }
 
-    function closeFullscreen() {
-        const fsPlayer = document.getElementById('fullscreenPlayer');
-        fsPlayer.classList.remove('open');
-        document.getElementById('fullscreenContent').innerHTML = '';
+    // ✅ CHANGED: Closes Mini Player
+    function closeMiniPlayer() {
+        const player = document.getElementById('miniPlayer');
+        player.classList.remove('open');
+        document.getElementById('miniContent').innerHTML = '';
     }
 
     function fetchYouTubeVideos(query) {
         let cached = getCached(query);
         if (cached) return Promise.resolve(cached);
+        
         if (!checkQuota()) return Promise.resolve([]);
         incrementQuota();
+
         return fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=10`)
             .then(res => res.json())
             .then(data => {
@@ -323,19 +354,26 @@
         nextPageToken = '';
         window.scrollTo({ top: 0, behavior: 'smooth' });
         saveHistory(query);
+
         let cached = getCached(query);
         if (cached && cached.length > 0) {
             renderVideos(cached);
             return;
         }
+
         if (!checkQuota()) { showQuotaTimer(); return; }
         incrementQuota();
+
         fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=20`)
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
                     nextPageToken = data.nextPageToken;
-                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    let results = data.items.map(item => ({
+                        title: item.snippet.title,
+                        videoId: item.id.videoId,
+                        channel: item.snippet.channelTitle
+                    }));
                     setCache(query, results);
                     renderVideos(results);
                 } else {
@@ -350,10 +388,12 @@
     function renderVideos(videos) {
         container.innerHTML = '';
         loadMoreContainer.innerHTML = '';
+        
         if (videos.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🕉️ कोई भक्ति वीडियो नहीं मिला।</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`;
             return;
         }
+        
         videos.forEach(video => {
             const card = document.createElement('div');
             card.className = 'video-card';
@@ -368,6 +408,7 @@
                 </div>`;
             container.appendChild(card);
         });
+
         if (nextPageToken) {
             const btn = document.createElement('button');
             btn.className = 'load-more-btn';
@@ -381,12 +422,14 @@
         if (!nextPageToken) return;
         if (!checkQuota()) { showQuotaTimer(); return; }
         incrementQuota();
+        
         fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(currentQuery)}&key=${YOUTUBE_API_KEY}&maxResults=20&pageToken=${nextPageToken}`)
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
                     nextPageToken = data.nextPageToken;
                     const newResults = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    
                     newResults.forEach(video => {
                         const card = document.createElement('div');
                         card.className = 'video-card';
@@ -401,6 +444,7 @@
                             </div>`;
                         container.appendChild(card);
                     });
+
                     loadMoreContainer.innerHTML = '';
                     if (nextPageToken) {
                         const btn = document.createElement('button');
