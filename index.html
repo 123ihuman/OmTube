@@ -159,25 +159,20 @@
     const container = document.getElementById('videoContainer');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    // Expanded Master Cache (Mixed with Aarti, Katha, Premanand, etc.)
+    // ⭐⭐⭐ YOUR REAL VIDEOS (From your exact links) ⭐⭐⭐
     const seedVideos = [
-        { title: "हनुमान चालीसा (Fast)", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" },
-        { title: "शिव तांडव स्तोत्र", videoId: "jdy0GgMbJY0", channel: "दिव्य मंत्र" },
-        { title: "ॐ नमः शिवाय", videoId: "Xb8D1ZYwVWU", channel: "भक्ति ब्लिस" },
-        { title: "महामृत्युंजय मंत्र 108", videoId: "HfACrKJ_Y2w", channel: "आध्यात्मिक हब" },
-        { title: "हरे कृष्ण महामंत्र", videoId: "Yocja_N5s1I", channel: "इस्कॉन" },
-        { title: "गणेश आरती", videoId: "zgFhFvVh1f0", channel: "भक्ति लोक" },
-        { title: "दुर्गा चालीसा", videoId: "MkD9v8-2QoE", channel: "देवी भक्ति" },
-        { title: "बजरंग बाण", videoId: "tQzCnMI4jNc", channel: "हनुमान भक्ति" },
-        { title: "राधा कृष्ण - मधुराष्टकम्", videoId: "L9e2DZ3xN4g", channel: "बृज भक्ति" },
-        { title: "साईं बाबा भजन", videoId: "y_08K-zYq1U", channel: "साईं भक्ति" },
-        { title: "माँ काली भजन", videoId: "e2qEw7t3EAs", channel: "शक्ति भक्ति" },
-        { title: "शनि चालीसा", videoId: "MRjXTzDkF8k", channel: "नवग्रह भक्ति" },
-        { title: "वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति" },
-        { title: "श्री राम चालीसा", videoId: "yU4S52l1MBI", channel: "अयोध्या संगीत" },
-        { title: "प्रेमानंद महाराज कथा", videoId: "P9tYjv4sLbU", channel: "श्री धाम" },
-        { title: "बागेश्वर बाबा - सुंदरकांड", videoId: "JXG9EpzVXc0", channel: "बागेश्वर धाम" },
-        { title: "जया किशोरी - कथा", videoId: "5Nm8QrQj8Y", channel: "जया किशोरी" }
+        { title: "हनुमान चालीसा", videoId: "U63zW7fUhJw", channel: "भक्ति ट्यूब" },
+        { title: "शिव भजन", videoId: "9AY-PhOuks8", channel: "भक्ति ट्यूब" },
+        { title: "राम भजन", videoId: "0rjuR_iiUMg", channel: "भक्ति ट्यूब" },
+        { title: "श्री कृष्ण लीला", videoId: "HuF-A0GqAMA", channel: "भक्ति ट्यूब" },
+        { title: "साईं बाबा भजन", videoId: "ynSnmzO1Bzk", channel: "भक्ति ट्यूब" },
+        { title: "भक्ति भजन", videoId: "JISqoVBJFcs", channel: "भक्ति ट्यूब" },
+        { title: "आरती संग्रह", videoId: "R-AqScAcIYk", channel: "भक्ति ट्यूब" },
+        { title: "कृष्ण भजन", videoId: "I_QwbiPiZNA", channel: "भक्ति ट्यूब" },
+        { title: "दुर्गा आरती", videoId: "ZxAZksjaUUU", channel: "भक्ति ट्यूब" },
+        { title: "जया किशोरी कथा", videoId: "5Ur_KRBTHw4", channel: "भक्ति ट्यूब" },
+        { title: "बागेश्वर बाबा कथा", videoId: "nnVjXp1rRgM", channel: "भक्ति ट्यूब" },
+        { title: "प्रेमानंद महाराज कथा", videoId: "PzOP3U49YGo", channel: "भक्ति ट्यूब" }
     ];
 
     const commonSearches = [
@@ -197,7 +192,6 @@
     let homeRefreshCount = 0;
     let loadMoreClickCount = 0;
 
-    // Check Quota (10 max per day)
     function checkQuota() {
         const now = new Date();
         if (lastResetDate !== now.toDateString()) {
@@ -264,11 +258,9 @@
         fetchVideos(category);
     }
 
-    // MAIN FIX: goHome() now instantly shows 10 random seed videos
     function goHome() {
         document.getElementById('searchInput').value = '';
         homeRefreshCount++;
-        // Always show 7-10 videos immediately, no API or quota needed!
         let homeFeed = [...seedVideos].sort(() => 0.5 - Math.random()).slice(0, 10);
         renderVideos(homeFeed);
     }
