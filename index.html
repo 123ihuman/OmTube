@@ -159,7 +159,7 @@
     const container = document.getElementById('videoContainer');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    // Master Cache (Unlimited Playback)
+    // Expanded Master Cache (Mixed with Aarti, Katha, Premanand, etc.)
     const seedVideos = [
         { title: "हनुमान चालीसा (Fast)", videoId: "AETFvQonfV8", channel: "भक्ति वेव्स" },
         { title: "शिव तांडव स्तोत्र", videoId: "jdy0GgMbJY0", channel: "दिव्य मंत्र" },
@@ -173,7 +173,11 @@
         { title: "साईं बाबा भजन", videoId: "y_08K-zYq1U", channel: "साईं भक्ति" },
         { title: "माँ काली भजन", videoId: "e2qEw7t3EAs", channel: "शक्ति भक्ति" },
         { title: "शनि चालीसा", videoId: "MRjXTzDkF8k", channel: "नवग्रह भक्ति" },
-        { title: "वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति" }
+        { title: "वेंकटेश्वर सुप्रभातम्", videoId: "j_H9k1aQz_o", channel: "तिरुपति भक्ति" },
+        { title: "श्री राम चालीसा", videoId: "yU4S52l1MBI", channel: "अयोध्या संगीत" },
+        { title: "प्रेमानंद महाराज कथा", videoId: "P9tYjv4sLbU", channel: "श्री धाम" },
+        { title: "बागेश्वर बाबा - सुंदरकांड", videoId: "JXG9EpzVXc0", channel: "बागेश्वर धाम" },
+        { title: "जया किशोरी - कथा", videoId: "5Nm8QrQj8Y", channel: "जया किशोरी" }
     ];
 
     const commonSearches = [
@@ -191,8 +195,9 @@
     let apiCount = parseInt(localStorage.getItem('bhakti_api_count') || '0');
     let lastResetDate = localStorage.getItem('bhakti_api_reset');
     let homeRefreshCount = 0;
-    let loadMoreClickCount = 0; // NEW: Counter for Load More clicks
+    let loadMoreClickCount = 0;
 
+    // Check Quota (10 max per day)
     function checkQuota() {
         const now = new Date();
         if (lastResetDate !== now.toDateString()) {
@@ -200,7 +205,7 @@
             localStorage.setItem('bhakti_api_count', '0');
             localStorage.setItem('bhakti_api_reset', now.toDateString());
         }
-        return apiCount < 10; // Quota Saver: 10 API calls per day max
+        return apiCount < 10;
     }
 
     function incrementQuota() {
@@ -259,11 +264,13 @@
         fetchVideos(category);
     }
 
+    // MAIN FIX: goHome() now instantly shows 10 random seed videos
     function goHome() {
         document.getElementById('searchInput').value = '';
         homeRefreshCount++;
-        let randomQuery = commonSearches[Math.floor(Math.random() * commonSearches.length)];
-        fetchVideos(randomQuery);
+        // Always show 7-10 videos immediately, no API or quota needed!
+        let homeFeed = [...seedVideos].sort(() => 0.5 - Math.random()).slice(0, 10);
+        renderVideos(homeFeed);
     }
 
     function toggleDarkMode() {
@@ -429,19 +436,14 @@
         loadMoreContainer.appendChild(btn);
     }
 
-    // ✅ NEW: Load More logic - tries random cached search first, then rare API, then seed fallback
     function loadMoreVideos() {
         loadMoreClickCount++;
-        
-        // 1. Pick a random search from history or common searches
         let history = JSON.parse(localStorage.getItem('bhakti_history') || '[]');
         let searchPool = history.length > 0 ? history : commonSearches;
         let randomQuery = searchPool[Math.floor(Math.random() * searchPool.length)];
         
-        // 2. Check if that search has cached results
         let cached = getCached(randomQuery);
         if (cached && cached.length > 0) {
-            // Append cached videos (shuffled to feel new)
             let shuffled = [...cached].sort(() => 0.5 - Math.random());
             shuffled.forEach(video => {
                 const card = document.createElement('div');
@@ -460,13 +462,11 @@
             return;
         }
         
-        // 3. If no cache, and it's the 1-in-1000 click, fetch from API
         if (loadMoreClickCount % 1000 === 0 && checkQuota()) {
             fetchVideos(randomQuery);
             return;
         }
         
-        // 4. Fallback: append shuffled seed videos (so it never breaks)
         const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
         fallback.forEach(video => {
             const card = document.createElement('div');
@@ -503,7 +503,7 @@
             searchVideos();
         };
         recognition.onerror = function(event) {
-            if (event.error === 'not-allowed') { showToast("कृपया माइक्रोफ़ोन की अनुमति दें"); }
+            if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें"); }
         };
     }
 
@@ -528,12 +528,6 @@
                 <p><strong>विक्रम संवत्:</strong> ${now.getFullYear() + 57}</p>
                 <p><strong>आज का विशेष:</strong> <span style="color:#E65100; font-weight:bold;">🙏 आरती एवं पूजा करें</span></p>
             </div>`;
-    }
-
-    // Request storage permission (subtle toast, no big popups)
-    if (!localStorage.getItem('storagePermissionGranted')) {
-        showToast("Cache active for offline use");
-        localStorage.setItem('storagePermissionGranted', 'true');
     }
 
     goHome();
