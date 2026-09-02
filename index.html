@@ -705,7 +705,31 @@
             })
             .catch(() => []);
     }
+        // NEW: Fetch from Piped API (NO Google Quota Used!)
+    async function fetchPipedResults(query) {
+        try {
+            const url = `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=videos`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.items && data.items.length > 0) {
+                // Map Piped data to our exact format
+                let results = data.items.map(item => ({
+                    title: item.title,
+                    videoId: item.url.split('v=')[1] || item.url.replace('/watch?v=', ''),
+                    channel: item.uploaderName || 'भक्ति ट्यूब'
+                }));
+                // Remove any bad links
+                results = results.filter(r => r.videoId && r.videoId !== '');
+                return results;
+            }
+            return [];
+        } catch (e) {
+            console.warn("Piped API failed, going to Google fallback:", e);
+            return [];
+        }
+    }
 
+        // MAIN FETCH: Piped First, Google Second (Unlimited)
     function fetchVideos(query, forceFresh = false) {
         currentQuery = query;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -717,6 +741,22 @@
             return;
         }
 
+        // Try the UNLIMITED Piped API first
+        fetchPipedResults(query).then(pipedResults => {
+            if (pipedResults.length > 0) {
+                setCache(query, pipedResults);
+                renderVideos(pipedResults);
+            } else {
+                // If Piped fails, fallback to Google API (rare)
+                fallbackToGoogle(query);
+            }
+        }).catch(() => {
+            fallbackToGoogle(query);
+        });
+    }
+
+    // Old Google Fallback (uses 10/day quota)
+    function fallbackToGoogle(query) {
         if (!checkQuota()) { showQuotaTimer(); return; }
         incrementQuota();
 
