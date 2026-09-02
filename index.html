@@ -479,10 +479,15 @@
             { title: "भक्ति फिल्म", videoId: "zBquF00yPtI", channel: "भक्ति ट्यूब" }
         ] };
        // 🚫 BLOCK DIRTY / VULGAR CONTENT LIST
+       // 🚫 BLOCK DIRTY / VULGAR / SMOKING / DRINKING / HARMFUL CONTENT
     const BANNED_WORDS = [
         "porn", "xxx", "sex", "sexy", "hot", "nude", "naked", "bikini", "boobs", "fuck", "shit", "bitch", "ass", 
         "dirty", "vulgar", "adult", "dating", "rape", "nsfw", "xxxx", "cam", "escort", "strip", "fucking",
-        "गंदा", "अश्लील", "नंगा", "सेक्स", "पोर्न", "चुदाई", "भोसड़ी", "मादरचोद", "बहनचोद", "लंड", "बड़ा", "रंडी"
+        "smoking", "smoke", "cigarette", "cigarettes", "cigar", "tobacco", "wine", "beer", "alcohol", "alcoholic", 
+        "liquor", "drink", "drinking", "drugs", "drug", "cocaine", "heroin", "marijuana", "weed", "vape", "vaping", 
+        "hookah", "pan masala", "gutka",
+        "गंदा", "अश्लील", "नंगा", "सेक्स", "पोर्न", "चुदाई", "भोसड़ी", "मादरचोद", "बहनचोद", "लंड", "बड़ा", "रंडी",
+        "धूम्रपान", "सिगरेट", "तंबाकू", "शराब", "वाइन", "बीयर", "दारू", "मदिरा", "नशा", "नशीली", "गुटखा", "पान मसाला"
     ];
 
     function checkForBadContent(text) {
@@ -849,7 +854,7 @@
             });
     }
 
-        function renderVideos(videos) {
+            function renderVideos(videos) {
         // 🚫 FILTER BAD CONTENT FROM RESULTS
         videos = videos.filter(video => {
             if (checkForBadContent(video.title) || checkForBadContent(video.channel)) {
@@ -858,11 +863,6 @@
             return true;
         });
 
-        container.innerHTML = '';
-        loadMoreContainer.innerHTML = '';
-        if (videos.length === 0) { container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`; return; }
-        // (The rest of your existing renderVideos code continues below...)
-            function renderVideos(videos) {
         container.innerHTML = '';
         loadMoreContainer.innerHTML = '';
         if (videos.length === 0) { container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`; return; }
@@ -881,7 +881,6 @@
             container.appendChild(card);
         });
 
-        // Always show Load More
         const btn = document.createElement('button');
         btn.className = 'load-more-btn';
         btn.innerText = "और वीडियो देखें (Load More)";
@@ -952,9 +951,7 @@
         });
     }
 
-            function searchVideos() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            function searchVideos() {
+               function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) { goHome(); return; }
 
@@ -969,19 +966,13 @@
             return; // Stop the search completely
         }
         
-        // (The rest of your existing searchVideos code continues below...)
-                if (!query) { goHome(); return; }
-
         let combinedResults = [];
 
-        // 1. Loop through OFFLINE_DB and match partial or full keywords
         for (const [key, videos] of Object.entries(OFFLINE_DB)) {
             const lowerKey = key.toLowerCase();
-            // Match if user input is inside the key, OR key is inside user input
             if (lowerKey.includes(query) || query.includes(lowerKey)) {
                 combinedResults = combinedResults.concat(videos);
             } else {
-                // Also check the individual video titles
                 videos.forEach(video => {
                     const title = video.title.toLowerCase();
                     if (title.includes(query) || query.includes(title)) {
@@ -991,7 +982,6 @@
             }
         }
 
-        // 2. If any matches found, remove duplicate video IDs and render them
         if (combinedResults.length > 0) {
             const uniqueResults = [...new Map(combinedResults.map(v => [v.videoId, v])).values()];
             renderVideos(uniqueResults);
@@ -999,6 +989,10 @@
             return;
         }
 
+        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
+        renderVideos(fallback);
+        saveHistory(query);
+    }
         // 3. If nothing matches, silently show a random collection of seed videos (No alert!)
         const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
         renderVideos(fallback);
