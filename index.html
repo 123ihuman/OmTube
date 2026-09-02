@@ -88,6 +88,7 @@
     <div class="header-right">
         <button class="icon-btn" onclick="toggleAppFullscreen()" title="ऐप फुल स्क्रीन"><i class="fas fa-mobile-screen"></i></button>
         <button class="icon-btn" onclick="goHome()" title="होम"><i class="fas fa-home"></i></button>
+                <button class="icon-btn" id="lockBtn" onclick="toggleAppLock()" title="पर्मानेंट लॉक"><i class="fas fa-lock-open"></i></button>
         <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
         <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
     </div>
@@ -488,6 +489,29 @@
     }
 
            let appModeActive = false;
+    let isAppLocked = false;
+        let appModeActive = false;
+    let isAppLocked = false;
+
+    function toggleAppLock() {
+        isAppLocked = !isAppLocked;
+        const lockBtn = document.getElementById('lockBtn');
+        if (isAppLocked) {
+            enterAppFullscreen();
+            lockBtn.innerHTML = '<i class="fas fa-lock"></i>';
+        } else {
+            lockBtn.innerHTML = '<i class="fas fa-lock-open"></i>';
+        }
+    }
+
+    // Lock Force Re-Engagement
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && isAppLocked) {
+            setTimeout(() => {
+                enterAppFullscreen();
+            }, 50); // Small delay to bypass browser security
+        }
+    });
 
     function toggleAppFullscreen() {
         if (document.fullscreenElement) {
@@ -506,11 +530,16 @@
         }
     }
 
-    function exitAppFullscreen() {
-        if (document.fullscreenElement) {
-            if (document.exitFullscreen) { document.exitFullscreen(); }
-            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+        function exitApp() {
+        toggleDrawer();
+        playBellSound();
+        const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
+        if (isConfirmed) {
+            alert("धन्यवाद! पुनः आएं!");
+            appModeActive = false;
+            isAppLocked = false; // Unlock so they can leave!
+            exitAppFullscreen();
+            window.close();
         }
     }
 
@@ -592,9 +621,9 @@
         } catch(e) {}
     }
 
-        function playVideo(videoId) {
+            function playVideo(videoId) {
         appModeActive = true;
-        enterAppFullscreen();
+        if (isAppLocked) { enterAppFullscreen(); }
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
         content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
@@ -602,15 +631,17 @@
         wrapper.classList.add('open');
     }
 
-    function closeMiniPlayer() {
+        function closeMiniPlayer() {
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
-        if (document.fullscreenElement) { document.exitFullscreen(); }
+        // REMOVED the line that exits fullscreen here
         wrapper.classList.remove('open');
         wrapper.classList.remove('audio-only');
         content.innerHTML = '';
+        
+        // If the app is locked, re-enter fullscreen immediately
+        if (isAppLocked) { enterAppFullscreen(); }
     }
-
     function toggleAudioMode() {
         const wrapper = document.getElementById('videoWrapper');
         wrapper.classList.toggle('audio-only');
