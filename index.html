@@ -771,21 +771,22 @@
         renderVideos(fallback);
         saveHistory(query);
     }
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'hi-IN';
-        recognition.interimResults = true;
-        recognition.start();
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('searchInput').value = transcript;
-            searchVideos();
-        };
-        recognition.onerror = function(event) {
-            if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें"); }
-        };
-    }
+                function voiceSearch() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN';
+            recognition.interimResults = true;
+            recognition.start();
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('searchInput').value = transcript;
+                searchVideos();
+            };
+            recognition.onerror = function(event) {
+                if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें"); }
+            };
+        }
 
     let counter = 0;
     function openMala() { document.getElementById('malaModal').classList.add('open'); }
