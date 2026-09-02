@@ -797,6 +797,17 @@
         wrapper.classList.remove('audio-only');
         wrapper.classList.add('open');
     }
+        function closeMiniPlayer() {
+        const wrapper = document.getElementById('videoWrapper');
+        const content = document.getElementById('videoContent');
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        wrapper.classList.remove('open');
+        wrapper.classList.remove('audio-only');
+        content.innerHTML = '';
+        
+        // If the app is locked, re-enter fullscreen immediately
+        if (isAppLocked) { enterAppFullscreen(); }
+    }
 
     function toggleVideoFullscreen() {
         const wrapper = document.getElementById('videoWrapper');
