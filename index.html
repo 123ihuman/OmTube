@@ -854,7 +854,7 @@
             });
     }
 
-            function renderVideos(videos) {
+               function renderVideos(videos) {
         // 🚫 FILTER BAD CONTENT FROM RESULTS
         videos = videos.filter(video => {
             if (checkForBadContent(video.title) || checkForBadContent(video.channel)) {
@@ -951,7 +951,7 @@
         });
     }
 
-               function searchVideos() {
+                  function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) { goHome(); return; }
 
@@ -989,11 +989,6 @@
             return;
         }
 
-        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
-        renderVideos(fallback);
-        saveHistory(query);
-    }
-        // 3. If nothing matches, silently show a random collection of seed videos (No alert!)
         const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
         renderVideos(fallback);
         saveHistory(query);
