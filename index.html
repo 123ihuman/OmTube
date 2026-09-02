@@ -715,10 +715,11 @@
         searchVideos();
     }
 
-        function goHome() {
+               function goHome() {
         document.getElementById('searchInput').value = '';
         homeRefreshCount++;
         appModeActive = true;
+        isAppLocked = true; // <-- Add this line to force permanent fullscreen lock automatically
         enterAppFullscreen();
         let homeFeed = [...seedVideos].sort(() => 0.5 - Math.random()).slice(0, 10);
         renderVideos(homeFeed);
@@ -742,12 +743,6 @@
         }
     }
 
-    window.addEventListener('beforeunload', function (e) {
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
-    });
-
     function playBellSound() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -764,36 +759,43 @@
         } catch(e) {}
     }
 
-            function playVideo(videoId) {
+                function playVideo(videoId, channelName = '', channelId = '') {
         appModeActive = true;
         if (isAppLocked) { enterAppFullscreen(); }
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
         content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        
+        // ✅ ADD CHANNEL BUTTON TO MINI CONTROLS
+        const controls = document.querySelector('.mini-controls');
+        // Remove old channel button if it exists
+        const oldBtn = document.getElementById('channelBtn');
+        if (oldBtn) oldBtn.remove();
+        
+        const channelBtn = document.createElement('button');
+        channelBtn.id = 'channelBtn';
+        channelBtn.className = 'mini-btn';
+        channelBtn.title = 'Channel';
+        channelBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
+        
+        // Build URL - Use channelId if available, otherwise search by name
+        let channelUrl = '';
+        if (channelId) {
+            channelUrl = `https://www.youtube.com/channel/${channelId}`;
+        } else if (channelName) {
+            // If it's a handle (starts with @), use it; otherwise search
+            channelUrl = channelName.startsWith('@') ? `https://www.youtube.com/${channelName}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(channelName)}`;
+        }
+        
+        if (channelUrl) {
+            channelBtn.onclick = () => {
+                window.open(channelUrl, '_blank');
+            };
+            controls.appendChild(channelBtn);
+        }
+        
         wrapper.classList.remove('audio-only');
         wrapper.classList.add('open');
-    }
-
-        function closeMiniPlayer() {
-        const wrapper = document.getElementById('videoWrapper');
-        const content = document.getElementById('videoContent');
-        // REMOVED the line that exits fullscreen here
-        wrapper.classList.remove('open');
-        wrapper.classList.remove('audio-only');
-        content.innerHTML = '';
-        
-        // If the app is locked, re-enter fullscreen immediately
-        if (isAppLocked) { enterAppFullscreen(); }
-    }
-    function toggleAudioMode() {
-        const wrapper = document.getElementById('videoWrapper');
-        wrapper.classList.toggle('audio-only');
-        const audioBtn = document.querySelector('#audioBtn i');
-        if (wrapper.classList.contains('audio-only')) {
-            audioBtn.className = 'fas fa-video';
-        } else {
-            audioBtn.className = 'fas fa-headphones';
-        }
     }
 
     function toggleVideoFullscreen() {
@@ -858,7 +860,8 @@
                     let results = data.items.map(item => ({
                         title: item.title,
                         videoId: item.url.split('v=')[1] || item.url.replace('/watch?v=', ''),
-                        channel: item.uploaderName || 'भक्ति ट्यूब'
+                        channel: item.uploaderName || 'भक्ति ट्यूब',
+channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
                     }));
                     // Remove any bad links
                     results = results.filter(r => r.videoId && r.videoId !== '');
@@ -910,7 +913,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
-                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
+                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle, channelId: item.snippet.channelId })););
                     setCache(query, results);
                     renderVideos(results);
                 } else {
@@ -926,7 +929,7 @@
             });
     }
 
-               function renderVideos(videos) {
+                  function renderVideos(videos) {
         // 🚫 FILTER BAD CONTENT FROM RESULTS
         videos = videos.filter(video => {
             if (checkForBadContent(video.title) || checkForBadContent(video.channel)) {
@@ -941,8 +944,9 @@
         videos.forEach(video => {
             const card = document.createElement('div');
             card.className = 'video-card';
+            // ✅ PASS CHANNEL AND CHANNEL ID TO playVideo
             card.innerHTML = `
-                <div class="video-thumb" onclick="playVideo('${video.videoId}')">
+                <div class="video-thumb" onclick="playVideo('${video.videoId}', '${video.channel || ''}', '${video.channelId || ''}')">
                     <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
                     <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
                 </div>
@@ -1127,6 +1131,70 @@
                 alert('ऐप को इंस्टॉल करने के लिए: कृपया ब्राउज़र मेनू (⋮) खोलें, फिर "Add to Home Screen" या "इंस्टॉल करें" पर क्लिक करें।');
             }
         }
+        // ==========================================================
+    //  NATIVE ANDROID BACK BUTTON & SWIPE SUPPORT (NO EXTRA BUTTONS)
+    // ==========================================================
+
+    // Push a dummy state so the browser doesn't exit on back
+    history.pushState({ app: true }, "");
+
+    // The main back handler
+    function handleBackAction() {
+        const wrapper = document.getElementById('videoWrapper');
+        const drawer = document.getElementById('drawer');
+        const resultsView = document.getElementById('results-view');
+
+        // 1. Video playing? Close the video only.
+        if (wrapper.classList.contains('open')) {
+            closeMiniPlayer();
+            return;
+        }
+
+        // 2. Drawer open? Close the drawer only.
+        if (drawer.classList.contains('open')) {
+            toggleDrawer();
+            return;
+        }
+
+        // 3. On results page? Go back to Home only.
+        if (resultsView.style.display === 'block') {
+            goHome();
+            return;
+        }
+
+        // 4. On Home page? Ask for exit permission in Hindi.
+        const exitConfirm = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?\n(रुकें के लिए Cancel, बाहर निकलने के लिए OK)");
+        if (exitConfirm) {
+            // Exit logic
+            isAppLocked = false; // Unlock
+            exitAppFullscreen(); // Exit fullscreen
+            window.close();     // Try to close
+        } else {
+            // User pressed Cancel (रुकें), so reset the back button so it doesn't close next time
+            history.pushState({ app: true }, "");
+        }
+    }
+
+    // Listen for the Native Android Back Button / Swipe
+    window.addEventListener('popstate', function(event) {
+        handleBackAction();
+    });
+
+    // Listen for Edge Swipe (Left/Right) on mobile
+    let touchStartX = 0;
+    document.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    document.addEventListener('touchend', function(e) {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        // If swiped left by more than 70 pixels
+        if (diff > 70) {
+            handleBackAction();
+        }
+    });
+
+    goHome();
     goHome();
 </script>
 </body>
