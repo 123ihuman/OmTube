@@ -829,8 +829,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
-                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle }));
-                    setCache(query, results);
+                    let results = data.items.map(item => ({ title: item.snippet.title, videoId: item.id.videoId, channel: item.snippet.channelTitle, channelId: item.snippet.channelId }));
                     return results;
                 } else { return []; }
             })
@@ -946,7 +945,7 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
             card.className = 'video-card';
             // ✅ PASS CHANNEL AND CHANNEL ID TO playVideo
             card.innerHTML = `
-                <div class="video-thumb" onclick="playVideo('${video.videoId}', '${video.channel || ''}', '${video.channelId || ''}')">
+               <div class="video-thumb" onclick="playVideo('${video.videoId}', '${video.channel || ''}', '${video.channelId || ''}')">
                     <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
                     <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
                 </div>
