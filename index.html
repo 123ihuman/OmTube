@@ -120,11 +120,14 @@
 
 <div class="video-wrapper" id="videoWrapper">
     <div class="mini-controls">
-        <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
-        <button class="mini-btn" onclick="toggleVideoFullscreen()" title="फुल स्क्रीन" id="fsBtn"><i class="fas fa-expand"></i></button>
         <button class="mini-btn" onclick="closeMiniPlayer()" title="बंद करें"><i class="fas fa-times"></i></button>
     </div>
+    
     <div id="videoContent" style="width:100%; height:100%;"></div>
+
+    <div style="position:absolute; bottom:5px; right:5px; z-index:10002; display:flex; gap:5px;">
+        <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
+    </div>
 </div>
 
 <div class="mala-modal" id="malaModal">
@@ -759,40 +762,15 @@
         } catch(e) {}
     }
 
-                function playVideo(videoId, channelName = '', channelId = '') {
+                    function playVideo(videoId, channelName = '', channelId = '') {
         appModeActive = true;
         if (isAppLocked) { enterAppFullscreen(); }
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
-        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        // Added &fs=0 to remove YouTube's own expand button
+        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
         
-        // ✅ ADD CHANNEL BUTTON TO MINI CONTROLS
-        const controls = document.querySelector('.mini-controls');
-        // Remove old channel button if it exists
-        const oldBtn = document.getElementById('channelBtn');
-        if (oldBtn) oldBtn.remove();
-        
-        const channelBtn = document.createElement('button');
-        channelBtn.id = 'channelBtn';
-        channelBtn.className = 'mini-btn';
-        channelBtn.title = 'Channel';
-        channelBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
-        
-        // Build URL - Use channelId if available, otherwise search by name
-        let channelUrl = '';
-        if (channelId) {
-            channelUrl = `https://www.youtube.com/channel/${channelId}`;
-        } else if (channelName) {
-            // If it's a handle (starts with @), use it; otherwise search
-            channelUrl = channelName.startsWith('@') ? `https://www.youtube.com/${channelName}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(channelName)}`;
-        }
-        
-        if (channelUrl) {
-            channelBtn.onclick = () => {
-                window.open(channelUrl, '_blank');
-            };
-            controls.appendChild(channelBtn);
-        }
+        // Remove old channel button logic (not needed anymore)
         
         wrapper.classList.remove('audio-only');
         wrapper.classList.add('open');
@@ -807,6 +785,15 @@
         
         // If the app is locked, re-enter fullscreen immediately
         if (isAppLocked) { enterAppFullscreen(); }
+    }    function toggleAudioMode() {
+        const wrapper = document.getElementById('videoWrapper');
+        wrapper.classList.toggle('audio-only');
+        const audioBtn = document.querySelector('#audioBtn i');
+        if (wrapper.classList.contains('audio-only')) {
+            audioBtn.className = 'fas fa-headphones';
+        } else {
+            audioBtn.className = 'fas fa-video';
+        }
     }
 
     function toggleVideoFullscreen() {
