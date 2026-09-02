@@ -173,8 +173,252 @@
         { title: "जया किशोरी कथा", videoId: "5Ur_KRBTHw4", channel: "भक्ति ट्यूब" },
         { title: "बागेश्वर बाबा कथा", videoId: "nnVjXp1rRgM", channel: "भक्ति ट्यूब" },
         { title: "प्रेमानंद महाराज कथा", videoId: "PzOP3U49YGo", channel: "भक्ति ट्यूब" }
-    ];
-
+    ];    // ⭐⭐⭐ OFFLINE DATABASE (No API calls needed here) ⭐⭐⭐
+        // ⭐⭐⭐ OFFLINE DATABASE (No API calls needed here) ⭐⭐⭐
+        // ⭐⭐⭐ FINAL OFFLINE DATABASE (208 Videos - No API calls) ⭐⭐⭐
+    const OFFLINE_DB = {
+        "हनुमान चालीसा": [
+            { title: "हनुमान चालीसा", videoId: "U63zW7fUhJw", channel: "भक्ति ट्यूब" },
+            { title: "Sankat Mochan Hanuman Ashtak", videoId: "AETFvQonfV8", channel: "T-Series" },
+            { title: "हनुमान चालीसा (Shemaroo)", videoId: "9q8kkmCa9GY", channel: "Shemaroo" },
+            { title: "हनुमान चालीसा Super Fast", videoId: "vWU7-l0Y6Q4", channel: "भक्ति ट्यूब" },
+            { title: "हनुमान चालीसा", videoId: "e_5jx52UeZ4", channel: "भक्ति ट्यूब" },
+            { title: "Bajrang Baan", videoId: "h1lT6cxwsPw", channel: "भक्ति ट्यूब" },
+            { title: "Hanuman Aarti", videoId: "r7GJ8GoGSD8", channel: "भक्ति ट्यूब" },
+            { title: "Hanuman Collection", videoId: "HH_a6aRO1TE", channel: "T-Series" }
+        ],
+        "शिव भजन": [
+            { title: "शिव भजन", videoId: "9AY-PhOuks8", channel: "भक्ति ट्यूब" },
+            { title: "Shiv Tandav", videoId: "SHjcWy_tf6g", channel: "भक्ति ट्यूब" }
+        ],
+        "राम भजन": [ { title: "राम भजन", videoId: "0rjuR_iiUMg", channel: "भक्ति ट्यूब" } ],
+        "श्री कृष्ण लीला": [ { title: "कृष्ण लीला", videoId: "HuF-A0GqAMA", channel: "भक्ति ट्यूब" } ],
+        "साईं बाबा भजन": [ { title: "साईं बाबा भजन", videoId: "ynSnmzO1Bzk", channel: "भक्ति ट्यूब" } ],
+        "भक्ति भजन": [ { title: "भक्ति भजन", videoId: "JISqoVBJFcs", channel: "भक्ति ट्यूब" } ],
+        "आरती संग्रह": [ { title: "आरती संग्रह", videoId: "R-AqScAcIYk", channel: "भक्ति ट्यूब" } ],
+        "कृष्ण भजन": [ { title: "कृष्ण भजन", videoId: "I_QwbiPiZNA", channel: "भक्ति ट्यूब" } ],
+        "दुर्गा आरती": [ { title: "दुर्गा आरती", videoId: "ZxAZksjaUUU", channel: "भक्ति ट्यूब" } ],
+        "जया किशोरी कथा": [ { title: "जया किशोरी कथा", videoId: "5Ur_KRBTHw4", channel: "भक्ति ट्यूब" } ],
+        "बागेश्वर बाबा कथा": [ { title: "बागेश्वर बाबा कथा", videoId: "nnVjXp1rRgM", channel: "भक्ति ट्यूब" } ],
+        "प्रेमानंद महाराज कथा": [ { title: "प्रेमानंद महाराज कथा", videoId: "PzOP3U49YGo", channel: "भक्ति ट्यूब" } ],
+        "गायत्री मंत्र": [ { title: "गायत्री मंत्र", videoId: "SarlTxrAbIY", channel: "भक्ति ट्यूब" } ],
+        "गणेश मंत्र": [ { title: "गणेश मंत्र", videoId: "vVf-1eaXgRs", channel: "भक्ति ट्यूब" } ],
+        "विष्णु सहस्रनाम": [ { title: "विष्णु सहस्रनाम", videoId: "SHjcWy_tf6g", channel: "भक्ति ट्यूब" } ],
+        "लक्ष्मी आरती": [ { title: "लक्ष्मी आरती", videoId: "oec7CXRAfeE", channel: "भक्ति ट्यूब" } ],
+        "Aisi Lagi Lagan": [ { title: "Aisi Lagi Lagan", videoId: "dnCE-kSHES0", channel: "भक्ति ट्यूब" } ],
+        "भक्ति संग्रह": [
+            { title: "भक्ति संग्रह", videoId: "LUx8wlA_dk8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "PlgIlN5gmQw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "QYgvG9zSBfE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "7qSR2U05Gb8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "IHyTxAR51Ow", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "swsJ4uoUpl0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "LvxnYiKj0e0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "71cMcLFmUfg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "eToRD7tAi4w", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "pgHFKYx6lWM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "iGDMtEsP3s8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "u4xPBS43tf0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "VCR5dQvhg_c", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mj7dMmnpfBU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "9RTCDGdBXL0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "oemPY2x_UAA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xNT6LCQxkAI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jJ3YUeMgLTw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "iQtOf704oJI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "KTJQSA3m8PU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "f-2EDWwt7TE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ZwwlRB1xS2Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "BQfbD2JtcHU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "PEHff_V7ALQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mRFMPiloFkw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "3lU51q4b3c8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "lVQ1dEaD5X0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "yB0-uNBp0AA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Y8icPbH7Lvo", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "_X0hqQeMg_o", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "-XEvyXmYPzY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "rKQh9gQq9tI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "3-zDYh7zYIU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "tnkCAIRSzB8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "-XeLeY0W928", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "DwmoTimv9QU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "pnoVeh2hcVA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "SHu1Nh2J544", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "L6cmbrQGWZs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "hMBKmQEPNzI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "S980-z1qx3g", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "T0ur0HL6d5M", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "QvUF4LkmwKo", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fQfGVzhqxsA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "2IlzAP9ibT0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ksPEwPcFGbU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "HSmjdnH8gQs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "17ZHT4WbSfw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jjbyGOC-mek", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "MeaVRC453M0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "gbYXo2Xqlmk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "TS3Gnpr_1to", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Pr1fPKVf1I4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "hdGkCcLt72E", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "wMWLP7otH0I", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "4ITTiT_iR0M", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "emsphj4r_Q8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "33U6rtJQJ-g", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "s5NEusVMeEQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "kBSK3Hu8Fy8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "tMYE0UJUNK8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "yiWErhQbUho", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "8MGrTEUgBwY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Rrh1T9odzkI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "UzdLbpQ-enM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "qtM4-K8IhM0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "1nks4YO6wxA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "WFABZjZz1mc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "HOh2-0FJ5Sk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jXKWjiEV-Wg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mYw_sr4hRgI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "9BSeuhwbidk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fiaYyTnNLu0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "r2Ycv8hHFtM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "QdYNOAgqqgU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xJ3vatsNQDU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "h0bUVhGlVys", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "UbWgeHpDg0Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "VSBsqBl4mns", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "_yws--k61_w", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Fahq3LYQq88", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "okJeyokGR8k", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "kB0dFMBE7-g", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "DcSfdbNvSuQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "XZEWtYZH1iQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "5tiMiWRqpgg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "6w7Ep8Xc0oo", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "pytnhdLUXuU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "KK9PRb2zf7A", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "-8jAEZOdJgA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "0E0MAGO1VUA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "hKLEIYMS-tk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "PRpL9LO5Mv0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "_JJhM9pWNqk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fNSx82TKRUI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "CLkUVs3PFe0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ZBvRWu_lpO8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "VZ50hdiydPc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mEfVpBzytQU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "JUCwn1zzPHA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "JPFxaIPxY0I", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "6AnGkemIJL0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "llt5Bjgfgy4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "4XyaEkHhSjA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "k3PYHJJGd9A", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "w0du0SAl0Bs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ybJdrEcdb5Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "DBWHvvTXZ3U", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "88gxIb2WTkQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "yrgvUjDisCc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "cqSf8g9f524", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xGxPPakGqKg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jKKbQ6QZumY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "qdYphIe-BoM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "XA9Ya-42fxA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "b3DFpy7nDfc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "wQP5ZNMfZAQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Lj8vvmBSqdM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "avrnush2Rlk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "zBquF00yPtI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "nWq2CrXDNy4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "-8POnq36LC4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "qTfyLvtG1Fg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "pZPlBzrmrYk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "zuDgKxRC_6M", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "EadIGjjobPM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ygaIa_Bq8-I", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "pLFJGKSIzyM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "GgoYkVCuagY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "G1NstSQJXbQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "EGd-reyDDBI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "vSRwrRH1zCc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "-eowpBKr3pE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "g9FvkiUzkks", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "qhsn6uMpuDM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "UaQo7MHSYkM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "0XftJhZDBFg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "rVZeSVIxwdw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "MpRfPCJYNa0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "STigshZiYTk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "zdjqsNp0w6Y", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "aiqbp-2J1Q8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xJdS-2jcyEA", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "_Z-Mt_a3HE8", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "uI0KcgdhRw0", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "z0mALgHUEbQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ij_hVcKzqOU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "x4AHGnhlgXg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "i-v_CKZ3WHc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "DDLVxUzXPSE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "iPLJckadwqE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Id_3Co1aK3Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jaESpLMrdXM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "lsKPIN-Uu-Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Z7OboPkEb9U", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "DsLcIHY7j6w", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Li16nJZVZJI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "rhwUBrGBsYs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "z8qwqB_oXrY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "9zsGP1BneL4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Q1JhGhHLRms", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xGl-N0Z8k2o", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mf1SBn0yUfE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "bnwgxezFh3I", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "sukiZMjp1xY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "3utlL_nQuqc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "NisfIUglozc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "6fKphXvCUDg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fJSVphnLGnM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "KlS0LDL_wGs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "d_SHgEul5DY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "niBKOkrdPJs", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "hfzjDSUcqoQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "GYzVABArjDk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "cgcKs8ZYPX4", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "28sptQICKCk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "b61KNQeMfQI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "qOG5UUKcDUg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "C5UHgA9C3kw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "z5NmcoNiUcw", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "hikP51xVtdo", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "M1YzJ3cRZpo", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "Kix62KNuOWk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "h9CMzZyYOGQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "WOzYsyXRQLg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "xOv7uAW5Twg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "s8ECQ2yi_-o", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ue0QGguBoqI", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "tAWZOIFmMmc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fAUXnjqR_7o", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ECQj0tIr2-c", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "mySyYZbPFXg", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "n5FBpaCUw5s", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "TXdEBy7t__k", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "j-FNkpsFqok", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "cVGfleki51Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "B3kFXnjOYls", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jaqYOEI8Pwk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "0y6nVeBMk1Q", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "KOTLN1PGkZc", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "uCCVYrqbmYY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "H0Xq3-Vcj8M", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "6fiG7k5vnHY", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "JzH8wmwp7qE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "kEOLRGUNT-I", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ThJoo1TSq0U", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "ob2C4wKsgqU", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "fsfQ1BmGz8A", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "jVHlcy48YBE", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति संग्रह", videoId: "CBXFeZhp0E8", channel: "भक्ति ट्यूब" }
+        ]
+    };
     const commonSearches = [
         "हनुमान चालीसा", "शिव भजन", "दुर्गा चालीसा", "कृष्ण भजन", "गणेश आरती", "राम चालीसा", "सुंदरकांड", 
         "भागवत कथा", "श्री राम कथा", "महाभारत", "भगवद गीता", "राधा कृष्ण", "काली माता", "साईं बाबा", 
@@ -251,11 +495,11 @@
         }
     }
 
-    function searchCategory(category) {
+        function searchCategory(category) {
         toggleDrawer();
         document.getElementById('searchInput').value = category;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        fetchVideos(category);
+        searchVideos(); //  <-- Changed to search offline DB first
     }
 
     function goHome() {
@@ -454,8 +698,23 @@
             return;
         }
         
-        if (loadMoreClickCount % 1000 === 0 && checkQuota()) {
-            fetchVideos(randomQuery);
+                if (loadMoreClickCount % 1000 === 0) {
+            let offlineResults = OFFLINE_DB[randomQuery];
+            let shuffled = offlineResults ? [...offlineResults].sort(() => 0.5 - Math.random()) : [...seedVideos].sort(() => 0.5 - Math.random());
+            shuffled.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="video-thumb" onclick="playVideo('${video.videoId}')">
+                        <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
+                        <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-meta"><span class="channel" style="color:#D32F2F; font-weight:600;">${video.channel}</span></div>
+                    </div>`;
+                container.appendChild(card);
+            });
             return;
         }
         
@@ -476,13 +735,42 @@
         });
     }
 
-    function searchVideos() {
+            function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) { goHome(); return; }
-        fetchVideos(query);
-    }
 
-    function voiceSearch() {
+        let combinedResults = [];
+
+        // 1. Loop through OFFLINE_DB and match partial or full keywords
+        for (const [key, videos] of Object.entries(OFFLINE_DB)) {
+            const lowerKey = key.toLowerCase();
+            // Match if user input is inside the key, OR key is inside user input
+            if (lowerKey.includes(query) || query.includes(lowerKey)) {
+                combinedResults = combinedResults.concat(videos);
+            } else {
+                // Also check the individual video titles
+                videos.forEach(video => {
+                    const title = video.title.toLowerCase();
+                    if (title.includes(query) || query.includes(title)) {
+                        combinedResults.push(video);
+                    }
+                });
+            }
+        }
+
+        // 2. If any matches found, remove duplicate video IDs and render them
+        if (combinedResults.length > 0) {
+            const uniqueResults = [...new Map(combinedResults.map(v => [v.videoId, v])).values()];
+            renderVideos(uniqueResults);
+            saveHistory(query);
+            return;
+        }
+
+        // 3. If nothing matches, silently show a random collection of seed videos (No alert!)
+        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
+        renderVideos(fallback);
+        saveHistory(query);
+    }
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
