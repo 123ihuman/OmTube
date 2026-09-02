@@ -637,11 +637,24 @@
         }
     });
 
-        function searchCategory(category) {
+               function searchCategory(category) {
         toggleDrawer();
         document.getElementById('searchInput').value = category;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        searchVideos(); //  <-- Changed to search offline DB first
+
+        // Map drawer names to OFFLINE_DB keys if they don't match perfectly
+        let dbKey = category;
+        if (category === 'भक्ति गाने और भजन') dbKey = 'भक्ति भजन';
+
+        // 1. DIRECT OFFLINE DB LOOKUP (INSTANT)
+        if (OFFLINE_DB[dbKey]) {
+            renderVideos(OFFLINE_DB[dbKey]);
+            saveHistory(category);
+            return;
+        }
+
+        // 2. FALLBACK TO STANDARD SEARCH (FOR ANY OTHER CATEGORY)
+        searchVideos();
     }
 
         function goHome() {
@@ -803,6 +816,7 @@
     }
 
         // MAIN FETCH: Piped First, Google Second (Unlimited)
+        // MAIN FETCH: Piped First, Google Second (Unlimited)
     function fetchVideos(query, forceFresh = false) {
         currentQuery = query;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -951,7 +965,7 @@
         });
     }
 
-                  function searchVideos() {
+                      function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) { goHome(); return; }
 
@@ -965,9 +979,9 @@
             </div>`;
             return; // Stop the search completely
         }
-        
-        let combinedResults = [];
 
+        // 1. Search offline DB first (fast, no API)
+        let combinedResults = [];
         for (const [key, videos] of Object.entries(OFFLINE_DB)) {
             const lowerKey = key.toLowerCase();
             if (lowerKey.includes(query) || query.includes(lowerKey)) {
@@ -982,6 +996,7 @@
             }
         }
 
+        // 2. If offline results found, show them instantly
         if (combinedResults.length > 0) {
             const uniqueResults = [...new Map(combinedResults.map(v => [v.videoId, v])).values()];
             renderVideos(uniqueResults);
@@ -989,9 +1004,8 @@
             return;
         }
 
-        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
-        renderVideos(fallback);
-        saveHistory(query);
+        // 3. If NO offline match, fetch from Piped API (and Google fallback)
+        fetchVideos(query);
     }
                 function voiceSearch() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
