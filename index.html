@@ -523,7 +523,7 @@
             localStorage.setItem('bhakti_api_count', '0');
             localStorage.setItem('bhakti_api_reset', now.toDateString());
         }
-        return apiCount < 10;
+         return apiCount < 1000000;
     }
 
     function incrementQuota() {
