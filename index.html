@@ -478,6 +478,22 @@
             { title: "भक्ति फिल्म", videoId: "avrnush2Rlk", channel: "भक्ति ट्यूब" },
             { title: "भक्ति फिल्म", videoId: "zBquF00yPtI", channel: "भक्ति ट्यूब" }
         ] };
+       // 🚫 BLOCK DIRTY / VULGAR CONTENT LIST
+    const BANNED_WORDS = [
+        "porn", "xxx", "sex", "sexy", "hot", "nude", "naked", "bikini", "boobs", "fuck", "shit", "bitch", "ass", 
+        "dirty", "vulgar", "adult", "dating", "rape", "nsfw", "xxxx", "cam", "escort", "strip", "fucking",
+        "गंदा", "अश्लील", "नंगा", "सेक्स", "पोर्न", "चुदाई", "भोसड़ी", "मादरचोद", "बहनचोद", "लंड", "बड़ा", "रंडी"
+    ];
+
+    function checkForBadContent(text) {
+        const lowerText = text.toLowerCase();
+        for (let word of BANNED_WORDS) {
+            if (lowerText.includes(word)) {
+                return true; // Bad word found
+            }
+        }
+        return false;
+    }
     const commonSearches = [
         "हनुमान चालीसा", "शिव भजन", "दुर्गा चालीसा", "कृष्ण भजन", "गणेश आरती", "राम चालीसा", "सुंदरकांड", 
         "भागवत कथा", "श्री राम कथा", "महाभारत", "भगवद गीता", "राधा कृष्ण", "काली माता", "साईं बाबा", 
@@ -743,27 +759,42 @@
             .catch(() => []);
     }
         // NEW: Fetch from Piped API (NO Google Quota Used!)
+        // NEW: Multi-Instance Fetch from Piped API (NO Google Quota Used!)
     async function fetchPipedResults(query) {
-        try {
-            const url = `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=videos`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.items && data.items.length > 0) {
-                // Map Piped data to our exact format
-                let results = data.items.map(item => ({
-                    title: item.title,
-                    videoId: item.url.split('v=')[1] || item.url.replace('/watch?v=', ''),
-                    channel: item.uploaderName || 'भक्ति ट्यूब'
-                }));
-                // Remove any bad links
-                results = results.filter(r => r.videoId && r.videoId !== '');
-                return results;
+        const instances = [
+            "https://pipedapi.kavin.rocks", 
+            "https://pipedapi.leptons.xyz",
+            "https://pipedapi.adminforge.de",
+            "https://pipedapi.drgns.space"
+        ];
+        
+        for (let i = 0; i < instances.length; i++) {
+            try {
+                const instance = instances[i];
+                const url = `${instance}/search?q=${encodeURIComponent(query)}&filter=videos`;
+                const res = await fetch(url);
+                
+                if (!res.ok) continue; // Instance is down, try next
+
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    // Map Piped data to our exact format
+                    let results = data.items.map(item => ({
+                        title: item.title,
+                        videoId: item.url.split('v=')[1] || item.url.replace('/watch?v=', ''),
+                        channel: item.uploaderName || 'भक्ति ट्यूब'
+                    }));
+                    // Remove any bad links
+                    results = results.filter(r => r.videoId && r.videoId !== '');
+                    return results;
+                }
+                return [];
+            } catch (e) {
+                console.warn(`Piped instance failed (${instances[i]}):`, e);
+                continue; // Try the next instance
             }
-            return [];
-        } catch (e) {
-            console.warn("Piped API failed, going to Google fallback:", e);
-            return [];
         }
+        return [];
     }
 
         // MAIN FETCH: Piped First, Google Second (Unlimited)
@@ -793,11 +824,12 @@
     }
 
     // Old Google Fallback (uses 10/day quota)
+       // Old Google Fallback (uses 10/day quota, but allows "Any" search)
     function fallbackToGoogle(query) {
         if (!checkQuota()) { showQuotaTimer(); return; }
         incrementQuota();
 
-        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=long&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=20`)
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}&maxResults=20`)
             .then(res => res.json())
             .then(data => {
                 if (data.items && data.items.length > 0) {
@@ -805,17 +837,32 @@
                     setCache(query, results);
                     renderVideos(results);
                 } else {
+                    // ONLY show Bhakti videos if truly nothing is found for that specific query
                     const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
                     renderVideos(fallback);
                 }
             })
             .catch(() => {
+                // Only show Bhakti videos on API error
                 const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
                 renderVideos(fallback);
             });
     }
 
-    function renderVideos(videos) {
+        function renderVideos(videos) {
+        // 🚫 FILTER BAD CONTENT FROM RESULTS
+        videos = videos.filter(video => {
+            if (checkForBadContent(video.title) || checkForBadContent(video.channel)) {
+                return false; // Remove this video
+            }
+            return true;
+        });
+
+        container.innerHTML = '';
+        loadMoreContainer.innerHTML = '';
+        if (videos.length === 0) { container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`; return; }
+        // (The rest of your existing renderVideos code continues below...)
+            function renderVideos(videos) {
         container.innerHTML = '';
         loadMoreContainer.innerHTML = '';
         if (videos.length === 0) { container.innerHTML = `<p style="text-align:center; padding:50px; font-size:1.2rem;">🙏 कोई भक्ति वीडियो नहीं मिला।</p>`; return; }
@@ -907,7 +954,23 @@
 
             function searchVideos() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            function searchVideos() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) { goHome(); return; }
+
+        // 🚫 BLOCK DIRTY SEARCH
+        if (checkForBadContent(query)) {
+            const area = document.getElementById('videoContainer');
+            area.innerHTML = `<div style="text-align:center; padding:50px; font-size:1.2rem; font-weight:bold;">
+                <h2 style="color:#D32F2F;">🚫 रुक जाइए!</h2>
+                <p style="color:#555;">यह एक <strong>प्रार्थना (Bhakti) ऐप</strong> है।</p>
+                <p style="color:#555;">कृपया इसे गंदा न करें। भगवान के भजन देखें। 🙏</p>
+            </div>`;
+            return; // Stop the search completely
+        }
+        
+        // (The rest of your existing searchVideos code continues below...)
+                if (!query) { goHome(); return; }
 
         let combinedResults = [];
 
