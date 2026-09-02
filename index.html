@@ -111,6 +111,7 @@
     <div class="drawer-item" onclick="searchCategory('भक्ति फिल्म')"><i class="fas fa-film"></i> भक्ति फिल्म</div>
     <div class="drawer-item" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> डार्क मोड</div>
     <div class="drawer-item" onclick="exitApp()"><i class="fas fa-sign-out-alt"></i> बाहर निकलें</div>
+    <div class="drawer-item" onclick="installApp()"><i class="fas fa-download"></i> ऐप इंस्टॉल करें</div>
 </div>
 
 <div class="video-container" id="videoContainer"></div>
@@ -157,6 +158,26 @@
 
 <script>
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
+            // Inject Manifest for PWA (Add to Home Screen)
+        const manifest = {
+            "name": "भक्ति ट्यूब",
+            "short_name": "भक्ति ट्यूब",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#FFF8F0",
+            "theme_color": "#D32F2F",
+            "icons": [{
+                "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23D32F2F'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>ॐ</text></svg>",
+                "sizes": "192x192",
+                "type": "image/svg+xml"
+            }]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = url;
+        document.head.appendChild(link);
     const container = document.getElementById('videoContainer');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
@@ -488,9 +509,7 @@
         overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
     }
 
-           let appModeActive = false;
-    let isAppLocked = false;
-        let appModeActive = false;
+              let appModeActive = false;
     let isAppLocked = false;
 
     function toggleAppLock() {
@@ -529,17 +548,11 @@
             else if (doc.msRequestFullscreen) { doc.msRequestFullscreen(); }
         }
     }
-
-        function exitApp() {
-        toggleDrawer();
-        playBellSound();
-        const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
-        if (isConfirmed) {
-            alert("धन्यवाद! पुनः आएं!");
-            appModeActive = false;
-            isAppLocked = false; // Unlock so they can leave!
-            exitAppFullscreen();
-            window.close();
+        function exitAppFullscreen() {
+        if (document.fullscreenElement) {
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
         }
     }
 
@@ -587,14 +600,15 @@
         toggleDrawer();
     }
 
-        function exitApp() {
+               function exitApp() {
         toggleDrawer();
         playBellSound();
         const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
         if (isConfirmed) {
             alert("धन्यवाद! पुनः आएं!");
-            appModeActive = false; // Unlock the screen
-            exitAppFullscreen();  // Exit fullscreen so they can close the browser
+            appModeActive = false; 
+            isAppLocked = false;    // <-- CRITICAL: Unlock so they can leave!
+            exitAppFullscreen();  
             window.close();
         }
     }
@@ -890,6 +904,28 @@
             </div>`;
     }
 
+            let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function installApp() {
+            toggleDrawer();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        alert('✅ ऐप सफलतापूर्वक इंस्टॉल हो गया!');
+                    } else {
+                        alert('इंस्टॉल रद्द कर दिया गया।');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('ऐप को इंस्टॉल करने के लिए: कृपया ब्राउज़र मेनू (⋮) खोलें, फिर "Add to Home Screen" या "इंस्टॉल करें" पर क्लिक करें।');
+            }
+        }
     goHome();
 </script>
 </body>
