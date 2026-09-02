@@ -80,8 +80,9 @@
         <div class="logo"><i class="fas fa-om"></i><span>भक्ति ट्यूब</span></div>
         <div class="menu-btn" onclick="toggleDrawer()">⋮</div>
     </div>
-    <div class="header-center">
-        <input type="text" id="searchInput" placeholder="भक्ति खोजें..." onkeyup="searchVideos()">
+        <div class="header-center">
+        <button onclick="goHome()" style="background:none; border:none; color:#D32F2F; font-size:1.2rem; cursor:pointer; padding-left:8px;"><i class="fas fa-arrow-left"></i></button>
+        <input type="text" id="searchInput" placeholder="भक्ति खोजें..." style="font-size:0.8rem;" onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
@@ -440,7 +441,43 @@
             { title: "भक्ति संग्रह", videoId: "jVHlcy48YBE", channel: "भक्ति ट्यूब" },
             { title: "भक्ति संग्रह", videoId: "CBXFeZhp0E8", channel: "भक्ति ट्यूब" }
         ]
-    };
+           ,
+        "आरती": [
+            { title: "आरती संग्रह", videoId: "R-AqScAcIYk", channel: "भक्ति ट्यूब" },
+            { title: "लक्ष्मी आरती", videoId: "oec7CXRAfeE", channel: "भक्ति ट्यूब" },
+            { title: "हनुमान आरती", videoId: "r7GJ8GoGSD8", channel: "भक्ति ट्यूब" },
+            { title: "दुर्गा आरती", videoId: "ZxAZksjaUUU", channel: "भक्ति ट्यूब" }
+        ],
+        "कथा": [
+            { title: "जया किशोरी कथा", videoId: "5Ur_KRBTHw4", channel: "भक्ति ट्यूब" },
+            { title: "बागेश्वर बाबा कथा", videoId: "nnVjXp1rRgM", channel: "भक्ति ट्यूब" },
+            { title: "प्रेमानंद महाराज कथा", videoId: "PzOP3U49YGo", channel: "भक्ति ट्यूब" },
+            { title: "भागवत कथा", videoId: "QYgvG9zSBfE", channel: "भक्ति ट्यूब" }
+        ],
+        "रामायण": [
+            { title: "राम भजन", videoId: "0rjuR_iiUMg", channel: "भक्ति ट्यूब" },
+            { title: "राम चालीसा", videoId: "cqSf8g9f524", channel: "भक्ति ट्यूब" },
+            { title: "हनुमान चालीसा", videoId: "AETFvQonfV8", channel: "T-Series" },
+            { title: "जय श्री राम", videoId: "xGxPPakGqKg", channel: "भक्ति ट्यूब" }
+        ],
+        "भगवद गीता": [
+            { title: "भगवद गीता उपदेश", videoId: "jKKbQ6QZumY", channel: "भक्ति ट्यूब" },
+            { title: "श्री कृष्ण लीला", videoId: "HuF-A0GqAMA", channel: "भक्ति ट्यूब" },
+            { title: "कृष्ण भजन", videoId: "I_QwbiPiZNA", channel: "भक्ति ट्यूब" },
+            { title: "गीता सार", videoId: "qdYphIe-BoM", channel: "भक्ति ट्यूब" }
+        ],
+        "महाभारत": [
+            { title: "महाभारत कथा", videoId: "XA9Ya-42fxA", channel: "भक्ति ट्यूब" },
+            { title: "श्री कृष्ण लीला", videoId: "HuF-A0GqAMA", channel: "भक्ति ट्यूब" },
+            { title: "हरे कृष्ण", videoId: "b3DFpy7nDfc", channel: "भक्ति ट्यूब" },
+            { title: "भागवत कथा", videoId: "QYgvG9zSBfE", channel: "भक्ति ट्यूब" }
+        ],
+        "भक्ति फिल्म": [
+            { title: "भक्ति फिल्म", videoId: "wQP5ZNMfZAQ", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति फिल्म", videoId: "Lj8vvmBSqdM", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति फिल्म", videoId: "avrnush2Rlk", channel: "भक्ति ट्यूब" },
+            { title: "भक्ति फिल्म", videoId: "zBquF00yPtI", channel: "भक्ति ट्यूब" }
+        ] };
     const commonSearches = [
         "हनुमान चालीसा", "शिव भजन", "दुर्गा चालीसा", "कृष्ण भजन", "गणेश आरती", "राम चालीसा", "सुंदरकांड", 
         "भागवत कथा", "श्री राम कथा", "महाभारत", "भगवद गीता", "राधा कृष्ण", "काली माता", "साईं बाबा", 
