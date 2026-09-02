@@ -487,13 +487,55 @@
         overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
     }
 
+           let appModeActive = false;
+
     function toggleAppFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
+        if (document.fullscreenElement) {
+            exitAppFullscreen();
         } else {
-            document.exitFullscreen();
+            enterAppFullscreen();
         }
     }
+
+    function enterAppFullscreen() {
+        const doc = document.documentElement;
+        if (!document.fullscreenElement) {
+            if (doc.requestFullscreen) { doc.requestFullscreen(); }
+            else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen(); }
+            else if (doc.msRequestFullscreen) { doc.msRequestFullscreen(); }
+        }
+    }
+
+    function exitAppFullscreen() {
+        if (document.fullscreenElement) {
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+        }
+    }
+
+    // Trigger fullscreen on the very first interaction (click or touch)
+    let hasInteracted = false;
+    document.addEventListener('click', function() {
+        if (!hasInteracted) {
+            hasInteracted = true;
+            enterAppFullscreen();
+        }
+    });
+    document.addEventListener('touchstart', function() {
+        if (!hasInteracted) {
+            hasInteracted = true;
+            enterAppFullscreen();
+        }
+    });
+
+    // Lock the screen: Block F11 and Escape keys from exiting fullscreen
+    document.addEventListener('keydown', function(e) {
+        if (appModeActive && (e.key === 'F11' || e.key === 'Escape')) {
+            e.preventDefault();
+            enterAppFullscreen();
+        }
+    });
 
         function searchCategory(category) {
         toggleDrawer();
@@ -502,9 +544,11 @@
         searchVideos(); //  <-- Changed to search offline DB first
     }
 
-    function goHome() {
+        function goHome() {
         document.getElementById('searchInput').value = '';
         homeRefreshCount++;
+        appModeActive = true;
+        enterAppFullscreen();
         let homeFeed = [...seedVideos].sort(() => 0.5 - Math.random()).slice(0, 10);
         renderVideos(homeFeed);
     }
@@ -514,12 +558,14 @@
         toggleDrawer();
     }
 
-    function exitApp() {
+        function exitApp() {
         toggleDrawer();
         playBellSound();
         const isConfirmed = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?");
         if (isConfirmed) {
             alert("धन्यवाद! पुनः आएं!");
+            appModeActive = false; // Unlock the screen
+            exitAppFullscreen();  // Exit fullscreen so they can close the browser
             window.close();
         }
     }
@@ -546,7 +592,9 @@
         } catch(e) {}
     }
 
-    function playVideo(videoId) {
+        function playVideo(videoId) {
+        appModeActive = true;
+        enterAppFullscreen();
         const wrapper = document.getElementById('videoWrapper');
         const content = document.getElementById('videoContent');
         content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
