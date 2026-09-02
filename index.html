@@ -977,7 +977,7 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
                 const card = document.createElement('div');
                 card.className = 'video-card';
                 card.innerHTML = `
-                    <div class="video-thumb" onclick="playVideo('${video.videoId}')">
+                    <div class="video-thumb" onclick="playVideo('${video.videoId}', '${video.channel || ''}', '${video.channelId || ''}')')">
                         <img src="https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg" alt="${video.title}">
                         <div class="play-overlay"><i class="fas fa-play-circle"></i></div>
                     </div>
@@ -1193,8 +1193,6 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
             handleBackAction();
         }
     });
-
-    goHome();
     goHome();
 </script>
 </body>
