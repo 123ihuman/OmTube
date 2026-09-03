@@ -1094,87 +1094,92 @@
         });
     }
 
-                      function searchVideos() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        if (!query) { goHome(); return; }
+                     function searchVideos() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!query) { goHome(); return; }
 
-        // 🚫 BLOCK DIRTY SEARCH
-        if (checkForBadContent(query)) {
-            const area = document.getElementById('videoContainer');
-            area.innerHTML = `<div style="text-align:center; padding:50px; font-size:1.2rem; font-weight:bold;">
-                <h2 style="color:#D32F2F;">🚫 रुक जाइए!</h2>
-                <p style="color:#555;">यह एक <strong>प्रार्थना (Bhakti) ऐप</strong> है।</p>
-                <p style="color:#555;">कृपया इसे गंदा न करें। भगवान के भजन देखें। 🙏</p>
-            </div>`;
-            return; // Stop the search completely
+    // 🚫 BLOCK DIRTY SEARCH
+    if (checkForBadContent(query)) {
+        const area = document.getElementById('videoContainer');
+        area.innerHTML = `<div style="text-align:center; padding:50px; font-size:1.2rem; font-weight:bold;">
+            <h2 style="color:#D32F2F;">🚫 रुक जाइए!</h2>
+            <p style="color:#555;">यह एक <strong>प्रार्थना (Bhakti) ऐप</strong> है।</p>
+            <p style="color:#555;">कृपया इसे गंदा न करें। भगवान के भजन देखें। 🙏</p>
+        </div>`;
+        return;
+    }
+
+    // 1. Offline search
+    let offlineResults = [];
+    for (const [key, videos] of Object.entries(OFFLINE_DB)) {
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes(query) || query.includes(lowerKey)) {
+            offlineResults = offlineResults.concat(videos);
+        } else {
+            videos.forEach(video => {
+                const title = video.title.toLowerCase();
+                if (title.includes(query) || query.includes(title)) {
+                    offlineResults.push(video);
+                }
+            });
         }
+    }
 
-       // 1. Offline search
-let offlineResults = [];
-for (const [key, videos] of Object.entries(OFFLINE_DB)) {
-    const lowerKey = key.toLowerCase();
-    if (lowerKey.includes(query) || query.includes(lowerKey)) {
-        offlineResults = offlineResults.concat(videos);
-    } else {
-        videos.forEach(video => {
-            const title = video.title.toLowerCase();
-            if (title.includes(query) || query.includes(title)) {
-                offlineResults.push(video);
+    // 2. Fetch API results in background
+    fetchPipedResults(query).then(apiResults => {
+        let merged = [...apiResults];
+        offlineResults.forEach(off => {
+            if (!merged.some(api => api.videoId === off.videoId)) {
+                merged.push(off);
             }
         });
-    }
-}
-
-// 2. Fetch API results in background
-fetchPipedResults(query).then(apiResults => {
-    // Merge: API results first, then offline (remove duplicates by videoId)
-    let merged = [...apiResults];
-    offlineResults.forEach(off => {
-        if (!merged.some(api => api.videoId === off.videoId)) {
-            merged.push(off);
+        if (merged.length > 0) {
+            setCache(query, merged);
+            renderVideos(merged);
+        } else {
+            const fallback = offlineResults.length > 0 ? offlineResults : [...seedVideos].sort(() => 0.5 - Math.random());
+            renderVideos(fallback);
+        }
+    }).catch(() => {
+        if (offlineResults.length > 0) {
+            renderVideos(offlineResults);
+        } else {
+            const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
+            renderVideos(fallback);
         }
     });
-    if (merged.length > 0) {
-        setCache(query, merged);
-        renderVideos(merged);
-    } else {
-        // Fallback to offline only or seed
-        const fallback = offlineResults.length > 0 ? offlineResults : [...seedVideos].sort(() => 0.5 - Math.random());
-        renderVideos(fallback);
-    }
-}).catch(() => {
-    // If API fails, show offline results
+
+    // Show offline results immediately (fast)
     if (offlineResults.length > 0) {
         renderVideos(offlineResults);
-    } else {
-        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
-        renderVideos(fallback);
+        saveHistory(query);
     }
-});
+}   // ← This closes searchVideos()
 
-// Show offline results immediately (fast)
-if (offlineResults.length > 0) {
-    renderVideos(offlineResults);
-    saveHistory(query);
-}
-                function voiceSearch() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'hi-IN';
-            recognition.interimResults = true;
-            recognition.start();
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('searchInput').value = transcript;
-                searchVideos();
-            };
-            recognition.onerror = function(event) {
-                if (event.error === 'not-allowed') { alert("कृपया माइक्रोफ़ोन की अनुमति दें"); }
-            };
+// voiceSearch is now a separate, standalone function
+function voiceSearch() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('वॉइस सर्च सपोर्ट नहीं है');
+        return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'hi-IN';
+    recognition.interimResults = true;
+    recognition.start();
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('searchInput').value = transcript;
+        searchVideos();
+    };
+    recognition.onerror = function(event) {
+        if (event.error === 'not-allowed') {
+            alert("कृपया माइक्रोफ़ोन की अनुमति दें");
         }
+    };
+}
 
-    let counter = 0;
+let counter = 0;
     function openMala() { document.getElementById('malaModal').classList.add('open'); }
     function closeMala() { document.getElementById('malaModal').classList.remove('open'); }
     function incrementCounter() {
