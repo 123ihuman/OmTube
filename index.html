@@ -54,6 +54,7 @@
         .video-wrapper:fullscreen { width: 100vw; height: 100vh; }
         .video-wrapper:fullscreen iframe { width: 100%; height: 100%; }
         /* Apply rotation to the video CONTENT (child of wrapper), not the wrapper itself */
+/* Force landscape via CSS – applied to the video content */
 .video-wrapper.rotated-landscape #videoContent {
     position: absolute !important;
     top: 50% !important;
@@ -62,6 +63,19 @@
     height: 100vw !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
+    background: #000 !important;
+}
+
+/* Make sure the iframe fills the content */
+#videoContent iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+}
+
+/* When fullscreen, ensure no extra scrollbars */
+.video-wrapper:fullscreen {
+    overflow: hidden !important;
 }
 
         .mini-controls { position: absolute; top: 5px; right: 5px; z-index: 10001; display: flex; gap: 5px; }
@@ -815,7 +829,8 @@
         // Remove old channel button logic (not needed anymore)
         
         wrapper.classList.remove('audio-only');
-        wrapper.classList.add('open');
+        wrapper.classList.add('open');    lockToLandscape();
+    content.classList.add('rotated-landscape');
     }
         function closeMiniPlayer() {
     const wrapper = document.getElementById('videoWrapper');
@@ -824,9 +839,10 @@
     wrapper.classList.remove('open');
     wrapper.classList.remove('audio-only');
     content.innerHTML = '';
-    content.classList.remove('rotated-landscape'); // <-- ADD THIS LINE
-
-    // If the app is locked, re-enter fullscreen immediately
+    content.classList.remove('rotated-landscape');
+    if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+    }
     if (isAppLocked) { enterAppFullscreen(); }
 }
     
@@ -840,8 +856,8 @@
             audioBtn.className = 'fas fa-video';
         }
     }
-
-        function toggleVideoFullscreen() {
+    
+   function toggleVideoFullscreen() {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     const btnIcon = document.querySelector('#fsBtn i');
@@ -856,31 +872,11 @@
             wrapper.msRequestFullscreen();
         }
 
-        // Try to lock orientation to landscape
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {
-                // Lock failed — fallback to CSS rotation
-                content.classList.add('rotated-landscape');
-            });
-        } else {
-            // No orientation API — fallback to CSS rotation
-            content.classList.add('rotated-landscape');
-        }
+        // Lock physical orientation
 
-        // Extra safety: check after 600ms and apply rotation if still portrait
-        setTimeout(() => {
-            if (screen.orientation && screen.orientation.type) {
-                if (!screen.orientation.type.startsWith('landscape')) {
-                    content.classList.add('rotated-landscape');
-                }
-            } else {
-                // If type is unavailable, assume we need rotation
-                content.classList.add('rotated-landscape');
-            }
-        }, 600);
+        // Apply CSS rotation fallback (guarantees landscape)
 
         btnIcon.className = 'fas fa-compress';
-
     } else {
         // ---- EXIT FULLSCREEN ----
         if (document.exitFullscreen) {
@@ -896,9 +892,7 @@
             screen.orientation.unlock();
         }
 
-        // Remove rotation class from content
         content.classList.remove('rotated-landscape');
-
         btnIcon.className = 'fas fa-expand';
     }
 }
@@ -1274,7 +1268,32 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
             handleBackAction();
         }
     });
-    goHome();
+    // ... all your existing functions ...
+
+function lockToLandscape() {
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape')
+            .then(() => console.log('Orientation locked'))
+            .catch(err => console.warn('Lock failed:', err));
+        
+    }
+}document.addEventListener('fullscreenchange', function() {
+    const wrapper = document.getElementById('videoWrapper');
+    const content = document.getElementById('videoContent');
+    if (document.fullscreenElement) {
+        lockToLandscape();
+        content.classList.add('rotated-landscape');
+    } else {
+        content.classList.remove('rotated-landscape');
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+    }
+});
+
+// ⬅️ Paste here 👆
+
+goHome();  // This is the last line of your <script>
 </script>
 </body>
 </html>
