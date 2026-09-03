@@ -48,34 +48,30 @@
         .video-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
         .video-meta { font-size: 0.85rem; margin-top: 6px; display: flex; justify-content: space-between; }
 
-        .video-wrapper { position: fixed; top: 0; left: 0; width: 100vw; height: 56.25vw; max-height: 100vh; background: #000; z-index: 9999; display: none; overflow: hidden; }
-        .video-wrapper.open { display: block; }
-        .video-wrapper iframe { width: 100%; height: 100%; border: none; }
-        .video-wrapper:fullscreen { width: 100vw; height: 100vh; }
-        .video-wrapper:fullscreen iframe { width: 100%; height: 100%; }
-        /* Apply rotation to the video CONTENT (child of wrapper), not the wrapper itself */
-/* Force landscape via CSS – applied to the video content */
-.video-wrapper.rotated-landscape #videoContent {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    width: 100vh !important;
-    height: 100vw !important;
-    transform: translate(-50%, -50%) rotate(90deg) !important;
-    transform-origin: center center !important;
-    background: #000 !important;
+        .video-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #000;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
+    transition: height 0.3s, max-height 0.3s;
+    height: 0;
+    max-height: 0;
 }
-
-/* Make sure the iframe fills the content */
-#videoContent iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
+.video-wrapper.open {
+    display: block;
+    height: 200px;
+    max-height: 200px;
 }
-
-/* When fullscreen, ensure no extra scrollbars */
-.video-wrapper:fullscreen {
-    overflow: hidden !important;
+.video-wrapper.fullscreen-mode {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100vw !important;
+    top: 0 !important;
+    left: 0 !important;
 }
 
         .mini-controls { position: absolute; top: 5px; right: 5px; z-index: 10001; display: flex; gap: 5px; }
@@ -132,15 +128,11 @@
         <div class="menu-btn" onclick="toggleDrawer()">⋮</div>
     </div>
         <div class="header-center">
-        <button onclick="goHome()" style="background:none; border:none; color:#D32F2F; font-size:1.2rem; cursor:pointer; padding-left:8px;"><i class="fas fa-arrow-left"></i></button>
         <input type="text" id="searchInput"placeholder="ॐ खोजें..."." style="font-size:0.8rem;" onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
     <div class="header-right">
-        <button class="icon-btn" onclick="toggleAppFullscreen()" title="ऐप फुल स्क्रीन"><i class="fas fa-mobile-screen"></i></button>
-        <button class="icon-btn" onclick="goHome()" title="होम"><i class="fas fa-home"></i></button>
-                <button class="icon-btn" id="lockBtn" onclick="toggleAppLock()" title="पर्मानेंट लॉक"><i class="fas fa-lock-open"></i></button>
         <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
         <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
     </div>
@@ -171,7 +163,7 @@
 
 <div class="video-wrapper" id="videoWrapper">
     <div class="mini-controls" style="top:5px; left:5px; right:auto;">
-        <button class="mini-btn" onclick="closeMiniPlayer()" title="बंद करें"><i class="fas fa-times"></i></button>
+        <button class="mini-btn" onclick="closeMiniPlayer()" title="बंद करें / वापस"><i class="fas fa-arrow-left"></i></button>
     </div>
     
     <div id="videoContent" style="width:100%; height:100%;"></div>
@@ -821,27 +813,29 @@
         } catch(e) {}
     }
 
-                    function playVideo(videoId, channelName = '', channelId = '') {
+                   function playVideo(videoId, channelName = '', channelId = '') {
     appModeActive = true;
-    if (isAppLocked) { enterAppFullscreen(); }
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     wrapper.classList.remove('audio-only');
-    wrapper.classList.add('open');   // ⬅️ ADD THIS LINE
+    wrapper.classList.remove('fullscreen-mode');
+    wrapper.classList.add('open');
 }
-        function closeMiniPlayer() {
+       function closeMiniPlayer() {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     if (document.fullscreenElement) { document.exitFullscreen(); }
     wrapper.classList.remove('open');
+    wrapper.classList.remove('fullscreen-mode');
     wrapper.classList.remove('audio-only');
+    wrapper.classList.remove('rotated-landscape');
     content.innerHTML = '';
-    content.classList.remove('rotated-landscape');
     if (screen.orientation && screen.orientation.unlock) {
         screen.orientation.unlock();
     }
-    if (isAppLocked) { enterAppFullscreen(); }
+    // Return to home or previous list (just like YouTube back)
+    goHome();
 }
     
        function toggleAudioMode() {
@@ -855,13 +849,23 @@
         }
     }
     
-   function toggleVideoFullscreen() {
+  function toggleVideoFullscreen() {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     const btnIcon = document.querySelector('#fsBtn i');
 
-    if (!document.fullscreenElement) {
-        // ---- ENTER FULLSCREEN ----
+    if (wrapper.classList.contains('fullscreen-mode')) {
+        // Exit fullscreen → back to mini
+        wrapper.classList.remove('fullscreen-mode');
+        wrapper.classList.remove('rotated-landscape');
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+        btnIcon.className = 'fas fa-expand';
+    } else {
+        // Enter fullscreen → landscape
+        wrapper.classList.add('fullscreen-mode');
         if (wrapper.requestFullscreen) {
             wrapper.requestFullscreen();
         } else if (wrapper.webkitRequestFullscreen) {
@@ -869,29 +873,9 @@
         } else if (wrapper.msRequestFullscreen) {
             wrapper.msRequestFullscreen();
         }
-
-        // Lock physical orientation
-
-        // Apply CSS rotation fallback (guarantees landscape)
-
+        lockToLandscape();
+        content.classList.add('rotated-landscape');
         btnIcon.className = 'fas fa-compress';
-    } else {
-        // ---- EXIT FULLSCREEN ----
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-
-        // Unlock orientation
-        if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-        }
-
-        content.classList.remove('rotated-landscape');
-        btnIcon.className = 'fas fa-expand';
     }
 }
     function fetchYouTubeVideos(query) {
@@ -1125,33 +1109,54 @@
             return; // Stop the search completely
         }
 
-        // 1. Search offline DB first (fast, no API)
-        let combinedResults = [];
-        for (const [key, videos] of Object.entries(OFFLINE_DB)) {
-            const lowerKey = key.toLowerCase();
-            if (lowerKey.includes(query) || query.includes(lowerKey)) {
-                combinedResults = combinedResults.concat(videos);
-            } else {
-                videos.forEach(video => {
-                    const title = video.title.toLowerCase();
-                    if (title.includes(query) || query.includes(title)) {
-                        combinedResults.push(video);
-                    }
-                });
+       // 1. Offline search
+let offlineResults = [];
+for (const [key, videos] of Object.entries(OFFLINE_DB)) {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes(query) || query.includes(lowerKey)) {
+        offlineResults = offlineResults.concat(videos);
+    } else {
+        videos.forEach(video => {
+            const title = video.title.toLowerCase();
+            if (title.includes(query) || query.includes(title)) {
+                offlineResults.push(video);
             }
-        }
-
-        // 2. If offline results found, show them instantly
-        if (combinedResults.length > 0) {
-            const uniqueResults = [...new Map(combinedResults.map(v => [v.videoId, v])).values()];
-            renderVideos(uniqueResults);
-            saveHistory(query);
-            return;
-        }
-
-        // 3. If NO offline match, fetch from Piped API (and Google fallback)
-        fetchVideos(query);
+        });
     }
+}
+
+// 2. Fetch API results in background
+fetchPipedResults(query).then(apiResults => {
+    // Merge: API results first, then offline (remove duplicates by videoId)
+    let merged = [...apiResults];
+    offlineResults.forEach(off => {
+        if (!merged.some(api => api.videoId === off.videoId)) {
+            merged.push(off);
+        }
+    });
+    if (merged.length > 0) {
+        setCache(query, merged);
+        renderVideos(merged);
+    } else {
+        // Fallback to offline only or seed
+        const fallback = offlineResults.length > 0 ? offlineResults : [...seedVideos].sort(() => 0.5 - Math.random());
+        renderVideos(fallback);
+    }
+}).catch(() => {
+    // If API fails, show offline results
+    if (offlineResults.length > 0) {
+        renderVideos(offlineResults);
+    } else {
+        const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
+        renderVideos(fallback);
+    }
+});
+
+// Show offline results immediately (fast)
+if (offlineResults.length > 0) {
+    renderVideos(offlineResults);
+    saveHistory(query);
+}
                 function voiceSearch() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('वॉइस सर्च सपोर्ट नहीं है'); return; }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1222,23 +1227,23 @@
     history.pushState({ app: true }, "");
 
     // The main back handler
-    function handleBackAction() {
+   function handleBackAction() {
     const wrapper = document.getElementById('videoWrapper');
     const drawer = document.getElementById('drawer');
 
-    // 1. Video playing? Close the video only.
+    // 1. Video playing? Close video only.
     if (wrapper.classList.contains('open')) {
         closeMiniPlayer();
         return;
     }
 
-    // 2. Drawer open? Close the drawer only.
+    // 2. Drawer open? Close drawer only.
     if (drawer.classList.contains('open')) {
         toggleDrawer();
         return;
     }
 
-    // 3. On Home page? Ask for exit permission.
+    // 3. On Home page? Ask to exit.
     const exitConfirm = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?\n(रुकें के लिए Cancel, बाहर निकलने के लिए OK)");
     if (exitConfirm) {
         isAppLocked = false;
