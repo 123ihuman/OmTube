@@ -220,18 +220,20 @@
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
             // Inject Manifest for PWA (Add to Home Screen)
         const manifest = {
-            "name": "ॐ ट्यूब",
-            "short_name": "ॐ ट्यूब",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#FFF8F0",
-            "theme_color": "#D32F2F",
-            "icons": [{
-                "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23D32F2F'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>ॐ</text></svg>",
-                "sizes": "192x192",
-                "type": "image/svg+xml"
-            }]
-        };
+    "name": "ॐ ट्यूब",
+    "short_name": "ॐ ट्यूब",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFF8F0",      // or your preferred colour
+    "theme_color": "#D32F2F",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23D32F2F'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>ॐ</text></svg>",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        }
+    ]
+};
         const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('link');
@@ -240,6 +242,7 @@
         document.head.appendChild(link);
     const container = document.getElementById('videoContainer');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
+    let currentQuery;
 
     // ⭐⭐⭐ YOUR REAL VIDEOS (From your exact links) ⭐⭐⭐
     const seedVideos = [
@@ -819,19 +822,14 @@
     }
 
                     function playVideo(videoId, channelName = '', channelId = '') {
-        appModeActive = true;
-        if (isAppLocked) { enterAppFullscreen(); }
-        const wrapper = document.getElementById('videoWrapper');
-        const content = document.getElementById('videoContent');
-        // Added &fs=0 to remove YouTube's own expand button
-        content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-        
-        // Remove old channel button logic (not needed anymore)
-        
-        wrapper.classList.remove('audio-only');
-        wrapper.classList.add('open');    lockToLandscape();
-    content.classList.add('rotated-landscape');
-    }
+    appModeActive = true;
+    if (isAppLocked) { enterAppFullscreen(); }
+    const wrapper = document.getElementById('videoWrapper');
+    const content = document.getElementById('videoContent');
+    content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    wrapper.classList.remove('audio-only');
+    wrapper.classList.add('open');   // ⬅️ ADD THIS LINE
+}
         function closeMiniPlayer() {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
@@ -1215,61 +1213,31 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
 
     // The main back handler
     function handleBackAction() {
-        const wrapper = document.getElementById('videoWrapper');
-        const drawer = document.getElementById('drawer');
-        const resultsView = document.getElementById('results-view');
+    const wrapper = document.getElementById('videoWrapper');
+    const drawer = document.getElementById('drawer');
 
-        // 1. Video playing? Close the video only.
-        if (wrapper.classList.contains('open')) {
-            closeMiniPlayer();
-            return;
-        }
-
-        // 2. Drawer open? Close the drawer only.
-        if (drawer.classList.contains('open')) {
-            toggleDrawer();
-            return;
-        }
-
-        // 3. On results page? Go back to Home only.
-        if (resultsView.style.display === 'block') {
-            goHome();
-            return;
-        }
-
-        // 4. On Home page? Ask for exit permission in Hindi.
-        const exitConfirm = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?\n(रुकें के लिए Cancel, बाहर निकलने के लिए OK)");
-        if (exitConfirm) {
-            // Exit logic
-            isAppLocked = false; // Unlock
-            exitAppFullscreen(); // Exit fullscreen
-            window.close();     // Try to close
-        } else {
-            // User pressed Cancel (रुकें), so reset the back button so it doesn't close next time
-            history.pushState({ app: true }, "");
-        }
+    // 1. Video playing? Close the video only.
+    if (wrapper.classList.contains('open')) {
+        closeMiniPlayer();
+        return;
     }
 
-    // Listen for the Native Android Back Button / Swipe
-    window.addEventListener('popstate', function(event) {
-        handleBackAction();
-    });
+    // 2. Drawer open? Close the drawer only.
+    if (drawer.classList.contains('open')) {
+        toggleDrawer();
+        return;
+    }
 
-    // Listen for Edge Swipe (Left/Right) on mobile
-    let touchStartX = 0;
-    document.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-    document.addEventListener('touchend', function(e) {
-        const touchEndX = e.changedTouches[0].screenX;
-        const diff = touchStartX - touchEndX;
-        // If swiped left by more than 70 pixels
-        if (diff > 70) {
-            handleBackAction();
-        }
-    });
-    // ... all your existing functions ...
-
+    // 3. On Home page? Ask for exit permission.
+    const exitConfirm = confirm("क्या आप वाकई बाहर निकलना चाहते हैं?\n(रुकें के लिए Cancel, बाहर निकलने के लिए OK)");
+    if (exitConfirm) {
+        isAppLocked = false;
+        exitAppFullscreen();
+        window.close();
+    } else {
+        history.pushState({ app: true }, "");
+    }
+}
 function lockToLandscape() {
     if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape')
