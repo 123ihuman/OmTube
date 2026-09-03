@@ -911,50 +911,61 @@
     }
         // NEW: Fetch from Piped API (NO Google Quota Used!)
         // NEW: Multi-Instance Fetch from Piped API (NO Google Quota Used!)
-    async function fetchPipedResults(query) {
+        async function fetchPipedResults(query) {
         const instances = [
-            "https://pipedapi.kavin.rocks", 
+            "https://pipedapi.kavin.rocks",
             "https://pipedapi.leptons.xyz",
             "https://pipedapi.adminforge.de",
             "https://pipedapi.drgns.space"
         ];
-        
-        for (let i = 0; i < instances.length; i++) {
+
+        // Fire all requests at the same time (Race)
+        const promises = instances.map(async (instance) => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-second limit for each
+
             try {
-                const instance = instances[i];
                 const url = `${instance}/search?q=${encodeURIComponent(query)}&filter=videos`;
-                const res = await fetch(url);
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 
-                if (!res.ok) continue; // Instance is down, try next
+                if (!res.ok) throw new Error("Failed");
 
                 const data = await res.json();
                 if (data.items && data.items.length > 0) {
-                    // Map Piped data to our exact format
                     let results = data.items.map(item => ({
                         title: item.title,
                         videoId: item.url.split('v=')[1] || item.url.replace('/watch?v=', ''),
-                        channel: item.uploaderName || 'भक्ति ट्यूब',
-channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
+                        channel: item.uploaderName || 'ॐ ट्यूब',
+                        channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
                     }));
-                    // Remove any bad links
                     results = results.filter(r => r.videoId && r.videoId !== '');
-                    return results;
+                    if (results.length > 0) return results;
                 }
-                return [];
+                return null;
             } catch (e) {
-                console.warn(`Piped instance failed (${instances[i]}):`, e);
-                continue; // Try the next instance
+                clearTimeout(timeoutId);
+                return null;
             }
-        }
-        return [];
-    }
+        });
 
+        // Get the fastest successful result instantly!
+        try {
+            const results = await Promise.any(promises);
+            return results;
+        } catch (e) {
+            return [];
+        }
+    }
         // MAIN FETCH: Piped First, Google Second (Unlimited)
         // MAIN FETCH: Piped First, Google Second (Unlimited)
-    function fetchVideos(query, forceFresh = false) {
+       function fetchVideos(query, forceFresh = false) {
         currentQuery = query;
         window.scrollTo({ top: 0, behavior: 'smooth' });
         saveHistory(query);
+
+        // Show instant loading feedback!
+        container.innerHTML = `<div style="text-align:center; padding:50px; font-size:1.2rem;">⏳ ॐ खोज रहे हैं...</div>`;
 
         let cached = getCached(query);
         if (cached && cached.length > 0 && !forceFresh) {
@@ -962,13 +973,12 @@ channelId: item.uploaderUrl ? item.uploaderUrl.split('/').pop() : ''
             return;
         }
 
-        // Try the UNLIMITED Piped API first
+        // Try the UNLIMITED Piped API first (now instant!)
         fetchPipedResults(query).then(pipedResults => {
             if (pipedResults.length > 0) {
                 setCache(query, pipedResults);
                 renderVideos(pipedResults);
             } else {
-                // If Piped fails, fallback to Google API (rare)
                 fallbackToGoogle(query);
             }
         }).catch(() => {
