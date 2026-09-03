@@ -54,7 +54,56 @@
     text-align: center;
     position: relative;
 }
-    
+ .alarm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(62,39,35,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.alarm-modal.open {
+    display: flex;
+}
+.alarm-box {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 20px;
+    max-width: 400px;
+    width: 92%;
+    border: 4px solid #FFD700;
+    text-align: center;
+    position: relative;
+}
+.alarm-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 8px 0;
+    background: #f5f5f5;
+    border-radius: 10px;
+    border-left: 4px solid #D32F2F;
+}
+.alarm-item .time {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #D32F2F;
+}
+.alarm-item .delete-btn {
+    background: none;
+    border: none;
+    color: #D32F2F;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.alarm-item .delete-btn:hover {
+    color: #b71c1c;
+}   
 
         .developer-bar { background: var(--bg-color); text-align: center; padding: 3px 10px; font-size: 0.7rem; font-weight: 700; border-bottom: 1px solid #FFE0B2; }
         .dev-text { background: linear-gradient(90deg, #D32F2F, #E65100, #FFB300); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -90,8 +139,8 @@
 }
 .video-wrapper.open {
     display: block;
-    height: 50vh;          /* 50% of viewport height */
-    max-height: 50vh;
+    height: 60vh;          /* 60% of viewport height – larger */
+    max-height: 60vh;
     width: 100%;
 }
 .video-wrapper.fullscreen-mode {
@@ -156,7 +205,7 @@
         <div class="menu-btn" onclick="toggleDrawer()">⋮</div>
     </div>
         <div class="header-center">
-        <input type="text" id="searchInput"placeholder="ॐ खोजें..."." style="font-size:0.8rem;" onkeyup="searchVideos()">
+        <input type="text" id="searchInput"placeholder="ॐ खोजें..." style="font-size:0.8rem;" onkeyup="searchVideos()">
         <button onclick="searchVideos()"><i class="fas fa-search"></i></button>
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
@@ -164,6 +213,7 @@
     <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
     <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
     <button class="icon-btn" onclick="openPujaTimer()" title="पूजा टाइमर"><i class="fas fa-clock"></i></button>
+    <button class="icon-btn" onclick="openAlarmModal()" title="पूजा अलार्म"><i class="fas fa-bell"></i></button>
 </div>
 </header>
 
@@ -239,6 +289,7 @@
 </div>   <!-- ← Calendar modal ends here -->
 
 <!-- Puja Modal (separate) -->
+<!-- Puja Modal (separate) -->
 <div class="puja-modal" id="pujaModal">
     <div class="puja-box">
         <button class="close-btn" onclick="closePujaTimer()">&times;</button>
@@ -254,8 +305,31 @@
         <div id="pujaCountdown" style="font-size:2rem; margin-top:15px; font-weight:bold; color:#D32F2F;">00:00</div>
     </div>
 </div>
+
+<!-- Alarm Modal (separate, NOT nested) -->
+<div class="alarm-modal" id="alarmModal">
+    <div class="alarm-box">
+        <button class="close-btn" onclick="closeAlarmModal()">&times;</button>
+        <h2 style="color:#D32F2F;"><i class="fas fa-bell"></i> पूजा अलार्म</h2>
+        <p style="font-size:0.9rem; color:#888;">अधिकतम 4 अलार्म सेट कर सकते हैं</p>
+        <div id="alarmList"></div>
+        <div style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+            <h4>नया अलार्म जोड़ें</h4>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <input type="number" id="alarmHour" placeholder="घंटा (0-23)" min="0" max="23" style="width:60px; padding:5px;">
+                <input type="number" id="alarmMinute" placeholder="मिनट (0-59)" min="0" max="59" style="width:60px; padding:5px;">
+                <button onclick="addAlarm()" style="padding:8px 16px; background:#D32F2F; color:white; border:none; border-radius:40px;">जोड़ें</button>
+            </div>
+            <div style="font-size:0.8rem; color:#888; margin-top:5px;">24-घंटे प्रारूप (0-23)</div>
+        </div>
+    </div>
+</div>
 <script>
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
+    // Request notification permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
             // Inject Manifest for PWA (Add to Home Screen)
         const manifest = {
     "name": "ॐ ट्यूब",
@@ -852,28 +926,20 @@
         } catch(e) {}
     }
 
-                   function playVideo(videoId, channelName = '', channelId = '') {
+                  function playVideo(videoId, channelName = '', channelId = '') {
     appModeActive = true;
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
-
-    // Add enablejsapi=1 so we can control play/pause
     content.innerHTML = `<iframe id="youtube-iframe" src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&enablejsapi=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-
     wrapper.classList.remove('audio-only');
     wrapper.classList.remove('fullscreen-mode');
     wrapper.classList.add('open');
-
-    // Reset player instance
     window.ytPlayerInstance = null;
-
-    // Load YouTube IFrame API if not already loaded
     if (typeof YT === 'undefined') {
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         document.head.appendChild(tag);
     } else {
-        // API already loaded – initialise player after a short delay
         setTimeout(initYouTubePlayer, 500);
     }
 }
@@ -1220,7 +1286,7 @@ function toggleAudioPlayback() {
         });
     }
 
-                     function searchVideos() {
+                   function searchVideos() {
     const query = document.getElementById('searchInput').value.trim().toLowerCase();
     if (!query) { goHome(); return; }
 
@@ -1235,7 +1301,12 @@ function toggleAudioPlayback() {
         return;
     }
 
-    // 1. Offline search
+    // 1. Show loading animation immediately
+    container.innerHTML = `<div style="text-align:center; padding:50px; font-size:1.5rem; animation: pulse 1s infinite;">
+        <span style="display:inline-block;">🔍</span> ॐ खोज रहे हैं...
+    </div>`;
+
+    // 2. Offline search (fast, shows instantly if found)
     let offlineResults = [];
     for (const [key, videos] of Object.entries(OFFLINE_DB)) {
         const lowerKey = key.toLowerCase();
@@ -1251,37 +1322,59 @@ function toggleAudioPlayback() {
         }
     }
 
-    // 2. Fetch API results in background
+    // If offline results exist, show them immediately (fast)
+    if (offlineResults.length > 0) {
+        renderVideos(offlineResults);
+        saveHistory(query);
+        // But we still want to show a small "loading more" indicator
+        const loadMore = document.getElementById('loadMoreContainer');
+        loadMore.innerHTML = `<div style="text-align:center; padding:10px; font-size:0.9rem; color:#888;">⏳ और वीडियो लोड हो रहे हैं...</div>`;
+    }
+
+    // 3. Fetch API results in background (always)
     fetchPipedResults(query).then(apiResults => {
+        // Merge API + offline (remove duplicates)
         let merged = [...apiResults];
         offlineResults.forEach(off => {
             if (!merged.some(api => api.videoId === off.videoId)) {
                 merged.push(off);
             }
         });
+
         if (merged.length > 0) {
             setCache(query, merged);
             renderVideos(merged);
+            // Remove loading indicator
+            document.getElementById('loadMoreContainer').innerHTML = '';
         } else {
-            const fallback = offlineResults.length > 0 ? offlineResults : [...seedVideos].sort(() => 0.5 - Math.random());
-            renderVideos(fallback);
+            // No results at all – show a subtle "try again" button, not a big empty state
+            container.innerHTML = `
+                <div style="text-align:center; padding:30px; font-size:1.1rem;">
+                    <p>🙏 कोई वीडियो नहीं मिला।</p>
+                    <button onclick="searchVideos()" style="padding:10px 20px; background:#D32F2F; color:white; border:none; border-radius:40px; margin-top:10px;">
+                        🔄 पुनः प्रयास करें
+                    </button>
+                </div>
+            `;
+            document.getElementById('loadMoreContainer').innerHTML = '';
         }
     }).catch(() => {
+        // API failed – show offline results if any, else a retry button
         if (offlineResults.length > 0) {
             renderVideos(offlineResults);
+            document.getElementById('loadMoreContainer').innerHTML = '';
         } else {
-            const fallback = [...seedVideos].sort(() => 0.5 - Math.random());
-            renderVideos(fallback);
+            container.innerHTML = `
+                <div style="text-align:center; padding:30px; font-size:1.1rem;">
+                    <p>⚠️ नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।</p>
+                    <button onclick="searchVideos()" style="padding:10px 20px; background:#D32F2F; color:white; border:none; border-radius:40px; margin-top:10px;">
+                        🔄 पुनः प्रयास करें
+                    </button>
+                </div>
+            `;
         }
     });
-
-    // Show offline results immediately (fast)
-    if (offlineResults.length > 0) {
-        renderVideos(offlineResults);
-        saveHistory(query);
-    }
-}   // ← This closes searchVideos()
-
+}
 // voiceSearch is now a separate, standalone function
 function voiceSearch() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -1309,10 +1402,14 @@ let counter = 0;
     function openMala() { document.getElementById('malaModal').classList.add('open'); }
     function closeMala() { document.getElementById('malaModal').classList.remove('open'); }
     function incrementCounter() {
-        counter++;
-        document.getElementById('counterDisplay').textContent = counter;
-        playBellSound();
+    counter++;
+    document.getElementById('counterDisplay').textContent = counter;
+    playBellSound();
+    // Vibrate if supported
+    if (navigator.vibrate) {
+        navigator.vibrate(50); // short vibration
     }
+}
     function resetCounter() { counter = 0; document.getElementById('counterDisplay').textContent = counter; }
 
     function openCalendar() { document.getElementById('calendarModal').classList.add('open'); updateCalendar(); }
@@ -1340,12 +1437,18 @@ function startPujaTimer() {
         if (pujaRemaining <= 0) {
             clearInterval(pujaInterval);
             pujaInterval = null;
-            alert('🔔 पूजा का समय हो गया! जय श्री राम! 🙏');
             playBellSound();
+            alert('🔔 आरती और पूजा करने का समय, जल्दी शुरू करें 🙏');
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('ॐ ट्यूब – पूजा टाइमर', {
+                    body: 'आरती और पूजा करने का समय, जल्दी शुरू करें 🙏',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23D32F2F"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white">ॐ</text></svg>'
+                });
+            }
         }
     }, 1000);
 }
-
+    
 function stopPujaTimer() {
     if (pujaInterval) {
         clearInterval(pujaInterval);
@@ -1439,7 +1542,153 @@ function lockToLandscape() {
 
 // ⬅️ Paste here 👆
 
-goHome();  // This is the last line of your <script>
+// ===================== ALARM SYSTEM =====================
+let alarms = JSON.parse(localStorage.getItem('omtube_alarms') || '[]');
+let alarmCheckInterval = null;
+
+function openAlarmModal() {
+    document.getElementById('alarmModal').classList.add('open');
+    renderAlarms();
+    if (!alarmCheckInterval) {
+        alarmCheckInterval = setInterval(checkAlarms, 1000);
+    }
+}
+
+function closeAlarmModal() {
+    document.getElementById('alarmModal').classList.remove('open');
+    // Keep interval running in background
+}
+
+function renderAlarms() {
+    const list = document.getElementById('alarmList');
+    if (alarms.length === 0) {
+        list.innerHTML = '<p style="color:#888;">कोई अलार्म सेट नहीं है।</p>';
+        return;
+    }
+    list.innerHTML = alarms.map((alarm, index) => `
+        <div class="alarm-item">
+            <span class="time">${String(alarm.hour).padStart(2,'0')}:${String(alarm.minute).padStart(2,'0')}</span>
+            <span style="font-size:0.9rem; color:#666;">${alarm.active ? '🔔 सक्रिय' : '⏸️ बंद'}</span>
+            <div>
+                <button onclick="toggleAlarm(${index})" style="background:none; border:none; font-size:1.1rem; cursor:pointer; margin-right:8px;">${alarm.active ? '⏸️' : '▶️'}</button>
+                <button onclick="deleteAlarm(${index})" class="delete-btn"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addAlarm() {
+    if (alarms.length >= 4) {
+        alert('आप अधिकतम 4 अलार्म ही सेट कर सकते हैं।');
+        return;
+    }
+    const hour = parseInt(document.getElementById('alarmHour').value);
+    const minute = parseInt(document.getElementById('alarmMinute').value);
+    if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        alert('कृपया सही समय दर्ज करें (0-23 घंटे, 0-59 मिनट)।');
+        return;
+    }
+    alarms.push({ hour, minute, active: true, triggered: false });
+    localStorage.setItem('omtube_alarms', JSON.stringify(alarms));
+    document.getElementById('alarmHour').value = '';
+    document.getElementById('alarmMinute').value = '';
+    renderAlarms();
+    updatePersistentNotification(); // if you have that function
+    if (!alarmCheckInterval) {
+        alarmCheckInterval = setInterval(checkAlarms, 1000);
+    }
+}
+
+function deleteAlarm(index) {
+    alarms.splice(index, 1);
+    localStorage.setItem('omtube_alarms', JSON.stringify(alarms));
+    renderAlarms();
+    updatePersistentNotification();
+}
+
+function toggleAlarm(index) {
+    alarms[index].active = !alarms[index].active;
+    if (alarms[index].active) {
+        alarms[index].triggered = false;
+    }
+    localStorage.setItem('omtube_alarms', JSON.stringify(alarms));
+    renderAlarms();
+    updatePersistentNotification();
+}
+
+function checkAlarms() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentSecond = now.getSeconds();
+
+    alarms.forEach((alarm, index) => {
+        if (!alarm.active) return;
+        if (alarm.hour === currentHour && alarm.minute === currentMinute && currentSecond === 0) {
+            if (!alarm.triggered) {
+                alarm.triggered = true;
+                localStorage.setItem('omtube_alarms', JSON.stringify(alarms));
+                ringAlarm(index);
+            }
+        } else {
+            if (alarm.triggered && (currentHour !== alarm.hour || currentMinute !== alarm.minute)) {
+                alarm.triggered = false;
+                localStorage.setItem('omtube_alarms', JSON.stringify(alarms));
+            }
+        }
+    });
+}
+
+function ringAlarm(index) {
+    playBellSound();
+    alert(`🔔 आरती और पूजा करने का समय, जल्दी शुरू करें 🙏 (${String(alarms[index].hour).padStart(2,'0')}:${String(alarms[index].minute).padStart(2,'0')})`);
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('ॐ ट्यूब – पूजा अलार्म', {
+            body: `आरती और पूजा करने का समय, जल्दी शुरू करें 🙏 (${String(alarms[index].hour).padStart(2,'0')}:${String(alarms[index].minute).padStart(2,'0')})`,
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23D32F2F"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white">ॐ</text></svg>'
+        });
+    }
+    // update persistent notification (if you have it)
+    updatePersistentNotification();
+}
+
+// ===================== PERSISTENT NOTIFICATION =====================
+function showPersistentNotification() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const activeAlarms = alarms.filter(a => a.active).length;
+    if (activeAlarms === 0) return;
+    if (window.persistentNotification) {
+        window.persistentNotification.close();
+    }
+    window.persistentNotification = new Notification('ॐ ट्यूब – पूजा अलार्म', {
+        body: `🔔 ${activeAlarms} अलार्म सक्रिय हैं। पूजा का समय होने पर सूचना मिलेगी।`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23D32F2F"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white">ॐ</text></svg>',
+        requireInteraction: true,
+        tag: 'omtube-persistent'
+    });
+}
+
+function dismissPersistentNotification() {
+    if (window.persistentNotification) {
+        window.persistentNotification.close();
+        window.persistentNotification = null;
+    }
+}
+
+function updatePersistentNotification() {
+    const activeAlarms = alarms.filter(a => a.active).length;
+    if (activeAlarms > 0) {
+        showPersistentNotification();
+    } else {
+        dismissPersistentNotification();
+    }
+}
+
+// Show persistent notification on load (if permission granted)
+if ('Notification' in window && Notification.permission === 'granted') {
+    setTimeout(updatePersistentNotification, 2000);
+}
+    goHome();  // This is the last line of your <script>
 </script>
 </body>
 </html>
