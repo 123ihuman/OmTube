@@ -6,6 +6,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>ॐ ट्यूब</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --bg-color: #FFF8F0; --text-color: #3E2723; --card-bg: #FFFFFF; --gold: #FFD700; --saffron: #FF9933; }
         body { font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; overflow-x: hidden; }
@@ -28,6 +29,32 @@
         .icon-btn { background: rgba(255,255,255,0.2); border: 2px solid #FFD700; color: #FFFFFF; cursor: pointer; padding: 6px; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         .icon-btn:hover { background: #FFD700; color: #D32F2F; }
         .menu-btn { font-size: 1.6rem; cursor: pointer; color: #FFFFFF; padding: 0 5px; margin-left: 5px; }
+        .puja-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(62,39,35,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.puja-modal.open {
+    display: flex;
+}
+.puja-box {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 20px;
+    max-width: 400px;
+    width: 92%;
+    border: 4px solid #FFD700;
+    text-align: center;
+    position: relative;
+}
+    
 
         .developer-bar { background: var(--bg-color); text-align: center; padding: 3px 10px; font-size: 0.7rem; font-weight: 700; border-bottom: 1px solid #FFE0B2; }
         .dev-text { background: linear-gradient(90deg, #D32F2F, #E65100, #FFB300); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -63,8 +90,9 @@
 }
 .video-wrapper.open {
     display: block;
-    height: 200px;
-    max-height: 200px;
+    height: 50vh;          /* 50% of viewport height */
+    max-height: 50vh;
+    width: 100%;
 }
 .video-wrapper.fullscreen-mode {
     height: 100vh !important;
@@ -133,9 +161,10 @@
         <button onclick="voiceSearch()"><i class="fas fa-microphone"></i></button>
     </div>
     <div class="header-right">
-        <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
-        <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
-    </div>
+    <button class="icon-btn" onclick="openMala()" title="माला जाप"><i class="fas fa-hands-praying"></i></button>
+    <button class="icon-btn" onclick="openCalendar()" title="कैलेंडर"><i class="fas fa-calendar-alt"></i></button>
+    <button class="icon-btn" onclick="openPujaTimer()" title="पूजा टाइमर"><i class="fas fa-clock"></i></button>
+</div>
 </header>
 
 <div class="developer-bar">
@@ -163,19 +192,19 @@
 
 <div class="video-wrapper" id="videoWrapper">
     <div class="mini-controls" style="top:5px; left:5px; right:auto;">
-        <button class="mini-btn" onclick="closeMiniPlayer()" title="बंद करें / वापस"><i class="fas fa-arrow-left"></i></button>
+       <button class="mini-btn" onclick="handleClosePlayer()" title="बंद करें"><i class="fas fa-times"></i></button>
     </div>
     
     <div id="videoContent" style="width:100%; height:100%;"></div>
-    <div id="audioAnimation">
+    <div id="audioAnimation" onclick="toggleAudioPlayback()" style="cursor:pointer;">
     <div class="audio-om">ॐ</div>
     <div class="audio-notes">🎵 🎶 🎵</div>
 </div>
 
     <div class="bottom-controls">
-        <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
-        <button class="mini-btn" onclick="toggleVideoFullscreen()" title="फुल स्क्रीन" id="fsBtn"><i class="fas fa-expand"></i></button>
-    </div>
+    <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
+    <button class="mini-btn" onclick="toggleVideoFullscreen()" title="फुल स्क्रीन" id="fsBtn"><i class="fas fa-expand"></i></button>
+    <button class="mini-btn" onclick="takeScreenshot()" title="स्क्रीनशॉट"><i class="fas fa-camera"></i></button>
 </div>
 
 <div class="mala-modal" id="malaModal">
@@ -200,14 +229,31 @@
     </div>
 </div>
 
+<!-- Calendar Modal -->
 <div class="calendar-modal" id="calendarModal">
     <div class="calendar-box">
         <button class="close-btn" onclick="closeCalendar()">&times;</button>
         <h2 style="color:#D32F2F;"><i class="fas fa-calendar-alt"></i> हिंदू कैलेंडर</h2>
         <div id="calendarContent"></div>
     </div>
-</div>
+</div>   <!-- ← Calendar modal ends here -->
 
+<!-- Puja Modal (separate) -->
+<div class="puja-modal" id="pujaModal">
+    <div class="puja-box">
+        <button class="close-btn" onclick="closePujaTimer()">&times;</button>
+        <h2 style="color:#D32F2F;"><i class="fas fa-clock"></i> पूजा टाइमर</h2>
+        <div>
+            <label>समय (मिनट): </label>
+            <input type="number" id="pujaMinutes" value="5" min="1" style="padding:5px; width:60px;">
+        </div>
+        <div style="margin-top:10px;">
+            <button onclick="startPujaTimer()" class="primary" style="padding:10px 20px; background:#D32F2F; color:white; border:none; border-radius:40px;">शुरू करें</button>
+            <button onclick="stopPujaTimer()" style="padding:10px 20px; background:#ccc; color:black; border:none; border-radius:40px;">रोकें</button>
+        </div>
+        <div id="pujaCountdown" style="font-size:2rem; margin-top:15px; font-weight:bold; color:#D32F2F;">00:00</div>
+    </div>
+</div>
 <script>
     const YOUTUBE_API_KEY = "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8";
             // Inject Manifest for PWA (Add to Home Screen)
@@ -694,13 +740,6 @@
     }
 
     // Lock Force Re-Engagement
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && isAppLocked) {
-            setTimeout(() => {
-                enterAppFullscreen();
-            }, 50); // Small delay to bypass browser security
-        }
-    });
 
     function toggleAppFullscreen() {
         if (document.fullscreenElement) {
@@ -817,10 +856,26 @@
     appModeActive = true;
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
-    content.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+
+    // Add enablejsapi=1 so we can control play/pause
+    content.innerHTML = `<iframe id="youtube-iframe" src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&enablejsapi=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+
     wrapper.classList.remove('audio-only');
     wrapper.classList.remove('fullscreen-mode');
     wrapper.classList.add('open');
+
+    // Reset player instance
+    window.ytPlayerInstance = null;
+
+    // Load YouTube IFrame API if not already loaded
+    if (typeof YT === 'undefined') {
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+    } else {
+        // API already loaded – initialise player after a short delay
+        setTimeout(initYouTubePlayer, 500);
+    }
 }
        function closeMiniPlayer() {
     const wrapper = document.getElementById('videoWrapper');
@@ -834,20 +889,91 @@
     if (screen.orientation && screen.orientation.unlock) {
         screen.orientation.unlock();
     }
-    // Return to home or previous list (just like YouTube back)
+    // Return to home
     goHome();
 }
     
-       function toggleAudioMode() {
-        const wrapper = document.getElementById('videoWrapper');
-        wrapper.classList.toggle('audio-only');
-        const audioBtn = document.querySelector('#audioBtn i');
-        if (wrapper.classList.contains('audio-only')) {
-            audioBtn.className = 'fas fa-headphones';
+       // This holds the YouTube player instance
+window.ytPlayerInstance = null;
+
+function initYouTubePlayer() {
+    if (window.ytPlayerInstance) return;
+    try {
+        if (typeof YT !== 'undefined' && YT.Player) {
+            window.ytPlayerInstance = new YT.Player('youtube-iframe');
+            console.log('✅ YouTube player ready');
         } else {
-            audioBtn.className = 'fas fa-video';
+            console.warn('YT API not ready yet');
+        }
+    } catch (e) {
+        console.warn('Player init error:', e);
+    }
+}
+
+// This runs when the YouTube API loads
+window.onYouTubeIframeAPIReady = function() {
+    initYouTubePlayer();
+};
+
+// Toggle play/pause when you click the OM symbol
+function toggleAudioPlayback() {
+    if (!window.ytPlayerInstance) {
+        // Try to initialise again
+        initYouTubePlayer();
+        if (!window.ytPlayerInstance) {
+            alert('Player is loading, please wait a moment...');
+            return;
         }
     }
+    try {
+        var state = window.ytPlayerInstance.getPlayerState();
+        // 1 = playing, 3 = buffering, 2 = paused, 0 = ended, -1 = unstarted
+        if (state === 1 || state === 3) {
+            window.ytPlayerInstance.pauseVideo();
+        } else {
+            window.ytPlayerInstance.playVideo();
+        }
+    } catch (e) {
+        console.warn('Toggle playback error:', e);
+        // Fallback: reset player and try again
+        window.ytPlayerInstance = null;
+        initYouTubePlayer();
+    }
+}
+    function toggleAudioMode() {
+    const wrapper = document.getElementById('videoWrapper');
+    wrapper.classList.toggle('audio-only');
+    const audioBtn = document.querySelector('#audioBtn i');
+    if (wrapper.classList.contains('audio-only')) {
+        audioBtn.className = 'fas fa-headphones';
+    } else {
+        audioBtn.className = 'fas fa-video';
+    }
+}
+    function handleClosePlayer() {
+    const wrapper = document.getElementById('videoWrapper');
+    if (wrapper.classList.contains('fullscreen-mode')) {
+        // If in fullscreen, just go back to mini
+        toggleVideoFullscreen();
+    } else {
+        // If in mini, close the player and go home
+        closeMiniPlayer();
+    }
+}
+  
+    function takeScreenshot() {
+    const wrapper = document.getElementById('videoWrapper');
+    if (typeof html2canvas !== 'undefined') {
+        html2canvas(wrapper).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'screenshot.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }).catch(() => alert('स्क्रीनशॉट लेने में त्रुटि।'));
+    } else {
+        alert('कृपया html2canvas लाइब्रेरी लोड करें।');
+    }
+}
     
   function toggleVideoFullscreen() {
     const wrapper = document.getElementById('videoWrapper');
@@ -1190,7 +1316,51 @@ let counter = 0;
     function resetCounter() { counter = 0; document.getElementById('counterDisplay').textContent = counter; }
 
     function openCalendar() { document.getElementById('calendarModal').classList.add('open'); updateCalendar(); }
-    function closeCalendar() { document.getElementById('calendarModal').classList.remove('open'); }
+   function closeCalendar() { document.getElementById('calendarModal').classList.remove('open'); }
+let pujaInterval = null;   // Only one declaration
+let pujaRemaining = 0;
+
+function openPujaTimer() {
+    document.getElementById('pujaModal').classList.add('open');
+}
+
+function closePujaTimer() {
+    document.getElementById('pujaModal').classList.remove('open');
+    stopPujaTimer();
+}
+
+function startPujaTimer() {
+    const mins = parseInt(document.getElementById('pujaMinutes').value) || 5;
+    pujaRemaining = mins * 60;
+    updatePujaDisplay();
+    if (pujaInterval) clearInterval(pujaInterval);
+    pujaInterval = setInterval(() => {
+        pujaRemaining--;
+        updatePujaDisplay();
+        if (pujaRemaining <= 0) {
+            clearInterval(pujaInterval);
+            pujaInterval = null;
+            alert('🔔 पूजा का समय हो गया! जय श्री राम! 🙏');
+            playBellSound();
+        }
+    }, 1000);
+}
+
+function stopPujaTimer() {
+    if (pujaInterval) {
+        clearInterval(pujaInterval);
+        pujaInterval = null;
+    }
+    pujaRemaining = 0;
+    updatePujaDisplay();
+}
+
+function updatePujaDisplay() {
+    const mins = Math.floor(pujaRemaining / 60);
+    const secs = pujaRemaining % 60;
+    document.getElementById('pujaCountdown').textContent = 
+        String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+}
     function updateCalendar() {
         const now = new Date();
         const months = ['चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ़', 'श्रावण', 'भाद्रपद', 'अश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन'];
@@ -1265,19 +1435,7 @@ function lockToLandscape() {
             .catch(err => console.warn('Lock failed:', err));
         
     }
-}document.addEventListener('fullscreenchange', function() {
-    const wrapper = document.getElementById('videoWrapper');
-    const content = document.getElementById('videoContent');
-    if (document.fullscreenElement) {
-        lockToLandscape();
-        content.classList.add('rotated-landscape');
-    } else {
-        content.classList.remove('rotated-landscape');
-        if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-        }
-    }
-});
+}
 
 // ⬅️ Paste here 👆
 
