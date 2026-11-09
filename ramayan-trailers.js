@@ -1,0 +1,2 @@
+// Auto-generated from ramayan-trailers.txt
+window.PLAYLIST_RAMAYAN_TRAILERS = [{"id": "f8oo5djgVek", "title": "Watch Ramanand Sagar's Ramayan, only on Tilak YouTube channel! | #RamayanonTilak"}, {"id": "kqKSDp2Emjs", "title": "17      | #Ramayana on #TilakTamil"}, {"id": "Dz3VKxE27XQ", "title": "17        YouTube   | #TilakTelugu"}, {"id": "XXpH7zBBqnU", "title": "17      ,  Tilak - Bangla YouTube ! | #TilakBangla"}, {"id": "IgGwl8v9044", "title": "17     ,  Tilak - Marathi YouTube ! | #TilakMarathi"}];
