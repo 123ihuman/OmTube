@@ -820,6 +820,14 @@ body.dark-mode .mini-title { color: #e8eaed; }
         <span>🎨 स्क्रीन इफेक्ट्स</span>
         <button onclick="closeEffectsMenu()" class="effects-close">×</button>
     </div>
+<div style="padding: 10px 16px; border-bottom: 1px solid #ddd; background: #f9f9f9;">
+    <div style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: #333;">कस्टम इफेक्ट (Custom Effect)</div>
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="customEffectText" placeholder="जैसे: राम, शिव..." style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem;">
+        <input type="color" id="customEffectColor" value="#FFD700" style="width: 35px; height: 33px; padding: 0; border: none; border-radius: 6px;">
+        <button onclick="startCustomEffect()" style="background: #D32F2F; color: white; border: none; padding: 0 12px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer;">लगाएं</button>
+    </div>
+</div>
     <div class="effects-grid">
         <div class="effect-item" data-effect="om" onclick="setEffect('om')">
             <div class="effect-preview" style="background:linear-gradient(135deg,#FFD700,#FFA500);">ॐ</div>
@@ -1255,7 +1263,12 @@ const APIFY_TOKEN = 'apify_api_QkYqTLPdjPdAmaCJnyxd2UD0rp7gSR3IGLtp';
                         });
                     }
                 });
-            } catch(e) { console.warn("RSS error:", e); }
+                        } catch(e) { console.warn("RSS error:", e); }
+        }
+        
+        // 🔥 MAGIC: Once the channel videos are downloaded, refresh the home screen instantly!
+        if (window.location.href.indexOf('localhost') > -1 || !document.getElementById('searchInput').value) {
+            goHome(); 
         }
     }
     const YOUTUBE_API_KEYS = [
@@ -1886,6 +1899,7 @@ function toggleTopMenu(e) {
     if (!m) return;
     m.classList.toggle('open');
 }
+// Close top menu when clicking anywhere outside
 document.addEventListener('click', function(e) {
     const m = document.getElementById('topMenu');
     if (!m || !m.classList.contains('open')) return;
@@ -2013,10 +2027,14 @@ const PLAYLIST_MAP = {
 // ===== SMART BACK — 1 step at a time =====
 function smartBack() {
     // 1) If video is playing
-        const wrapper = document.getElementById('videoWrapper');
+            const wrapper = document.getElementById('videoWrapper');
     if (wrapper && wrapper.classList.contains('open')) {
-        closeMiniPlayer(); // This now closes the video AND forces vertical mode
-        return;
+        if (wrapper.classList.contains('fullscreen-mode')) {
+            toggleVideoFullscreen(); // 1st swipe: Horizontal goes back to mini-player (portrait)
+        } else {
+            closeMiniPlayer();       // 2nd swipe: Mini-player closes completely
+        }
+        return true;
     }
 
     // 2) If any modal open → close it
@@ -2808,9 +2826,9 @@ function toggleAudioMode() {
    
 function forceLandscape() {
     const wrapper = document.getElementById('videoWrapper');
-    if (wrapper.classList.contains('fullscreen-mode')) {
-        // If already horizontal, go back to searched items (mini player)
-        closeMiniPlayer();
+        if (wrapper.classList.contains('fullscreen-mode')) {
+        // If already horizontal, go back to mini player (forces vertical)
+        toggleVideoFullscreen(); 
     } else {
         // Force horizontal
         wrapper.classList.add('fullscreen-mode');
@@ -2845,10 +2863,7 @@ function forceLandscape() {
             document.exitFullscreen().catch(()=>{});
         }
 
-                // Unlock orientation → back to portrait
-        unlockOrientation();
-
-        // Show system status bar again
+                        // Show system status bar again
         try {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
                 window.Capacitor.Plugins.StatusBar.show();
@@ -2856,10 +2871,11 @@ function forceLandscape() {
             }
         } catch (e) {}
 
-        // Force back to portrait
+        // 🔥 FORCE VERTICAL MODE (Portrait)
         try {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('portrait').then(() => {
+                    // Unlock after 500ms so the user can rotate again later if they want
                     setTimeout(() => {
                         try { screen.orientation.unlock(); } catch(e) {}
                     }, 500);
@@ -3859,6 +3875,16 @@ const EffectsEngine = (function() {
 
 // ===== Expose Effects Engine to global scope =====
 window.setEffect = function(name) {
+window.startCustomEffect = function() {
+    const text = document.getElementById('customEffectText').value.trim();
+    const color = document.getElementById('customEffectColor').value;
+    if (!text) return alert('कृपया कोई नाम लिखें!');
+    
+    // Inject custom effect into the engine
+    EffectsEngine.customEffect = { type:'text', chars:[text], colors:[color, '#FFFFFF'], size:[24,40], speed:[1.5,3], drift:[-0.5,0.5], rot:[-0.05,0.05], rate:5 };
+    EffectsEngine.setEffect('customEffect');
+    closeEffectsMenu();
+};
     try {
         EffectsEngine.setEffect(name);
     } catch (e) {
@@ -4464,9 +4490,13 @@ if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App
 // ================================================================
 function __doSmartBack() {
     // 1) Video playing
-        const wrapper = document.getElementById('videoWrapper');
+            const wrapper = document.getElementById('videoWrapper');
     if (wrapper && wrapper.classList.contains('open')) {
-        closeMiniPlayer(); // This now closes the video AND forces vertical mode
+        if (wrapper.classList.contains('fullscreen-mode')) {
+            toggleVideoFullscreen(); // 1st swipe: Horizontal goes back to mini-player (portrait)
+        } else {
+            closeMiniPlayer();       // 2nd swipe: Mini-player closes completely
+        }
         return true;
     }
 
