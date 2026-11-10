@@ -774,7 +774,9 @@ body.dark-mode .mini-title { color: #e8eaed; }
 <header class="header">
     <div class="header-left">
         
-        <div class="logo"><i class="fas fa-om"></i><span>ट्यूब</span></div>
+        <div class="logo" onclick="toggleDrawer()" style="cursor: pointer; -webkit-tap-highlight-color: transparent;">
+    <i class="fas fa-om"></i><span>ट्यूब</span>
+</div>
         <div class="menu-btn" onclick="toggleDrawer()" style="font-size: 1.6rem; color: #FFD700;"><i class="fas fa-bars"></i></div>
     </div>
            <div class="header-center" style="position:relative;">
@@ -798,8 +800,14 @@ body.dark-mode .mini-title { color: #e8eaed; }
     <div class="top-menu-item" onclick="openCalendar(); toggleTopMenu(event);">
         <i class="fas fa-calendar-alt"></i> <span>कैलेंडर</span>
     </div>
-    <div class="top-menu-item" onclick="toggleEffectsMenu(event); toggleTopMenu(event);">
+        <div class="top-menu-item" onclick="toggleEffectsMenu(event); toggleTopMenu(event);">
         <i class="fas fa-magic"></i> <span>स्क्रीन इफेक्ट्स</span>
+    </div>
+    <div class="top-menu-item" onclick="setEffect('none'); toggleTopMenu(event);">
+        <i class="fas fa-ban"></i> <span>इफेक्ट बंद करें</span>
+    </div>
+    <div class="top-menu-item" onclick="openPlayerSettings(); toggleTopMenu(event);">
+        <i class="fas fa-cog"></i> <span>प्लेयर सेटिंग्स (Seek/Speed)</span>
     </div>
     <div class="top-menu-item" onclick="alert('सहायता के लिए संपर्क करें:\nदिव्य | 9369224174'); toggleTopMenu(event);">
         <i class="fas fa-question-circle"></i> <span>सहायता</span>
@@ -1070,7 +1078,6 @@ body.dark-mode .mini-title { color: #e8eaed; }
     <button class="mini-btn" onclick="toggleAudioMode()" title="ऑडियो मोड" id="audioBtn"><i class="fas fa-headphones"></i></button>
         <button class="mini-btn" onclick="cycleZoom()" title="ज़ूम" id="zoomBtn" style="background:#D32F2F;"><i class="fas fa-search-plus"></i></button>
 <button class="mini-btn" onclick="forceLandscape()" title="हॉरिजॉन्टल" id="landscapeBtn" style="background:#00695c; margin-left: 5px;"><i class="fas fa-mobile-screen-button"></i></button>
-    <button class="mini-btn" onclick="toggleVideoFullscreen()" title="फुल स्क्रीन" id="fsBtn"><i class="fas fa-expand"></i></button>
     </div>
 </div>
 
@@ -1197,9 +1204,46 @@ body.dark-mode .mini-title { color: #e8eaed; }
     </div>
 </div>
 <script>
+
+    function loadDynamicVideos() {
+        try {
+            const saved = localStorage.getItem('omtube_dynamic_saved');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.forEach(v => {
+                    if (!window.DYNAMIC_VIDEOS.find(x => x.videoId === v.videoId)) {
+                        window.DYNAMIC_VIDEOS.push(v);
+                    }
+                });
+            }
+        } catch(e) {}
+    }
     // Multiple YouTube API keys — rotated on each request to avoid quota
 const APIFY_TOKEN = 'apify_api_QkYqTLPdjPdAmaCJnyxd2UD0rp7gSR3IGLtp';
     // ===== DYNAMIC VIDEOS (GitHub + Channel RSS) =====
+    // 0. Persistent Storage Helpers
+    function saveDynamicVideos() {
+        try {
+            localStorage.setItem('omtube_dynamic_saved', JSON.stringify(window.DYNAMIC_VIDEOS));
+        } catch(e) {}
+    }
+
+    function loadDynamicVideos() {
+        try {
+            const saved = localStorage.getItem('omtube_dynamic_saved');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.forEach(v => {
+                    if (!window.DYNAMIC_VIDEOS.find(x => x.videoId === v.videoId)) {
+                        window.DYNAMIC_VIDEOS.push(v);
+                    }
+                });
+            }
+        } catch(e) {}
+    }
+    
+    // Load them immediately when the app starts
+    loadDynamicVideos();
     // 3. Fetch from your GitHub Repo via jsDelivr (Free CDN, no CORS issues)
     async function fetchGitHubVideos() {
         try {
@@ -1208,7 +1252,7 @@ const APIFY_TOKEN = 'apify_api_QkYqTLPdjPdAmaCJnyxd2UD0rp7gSR3IGLtp';
             const res = await fetch(url);
             const data = await res.json();
             
-            if (Array.isArray(data)) {
+                        if (Array.isArray(data)) {
                 data.forEach(v => {
                     if (v.id && v.title) {
                         // Check if it's already in the dynamic list to avoid duplicates
@@ -1223,6 +1267,9 @@ const APIFY_TOKEN = 'apify_api_QkYqTLPdjPdAmaCJnyxd2UD0rp7gSR3IGLtp';
                     }
                 });
                 console.log('✅ GitHub videos loaded:', data.length);
+                
+                // 🔥 REFRESH HOME SCREEN INSTANTLY
+                if(!document.getElementById('searchInput').value) goHome();
             }
         } catch(e) {
             console.warn('GitHub fetch failed:', e);
@@ -1236,41 +1283,67 @@ const APIFY_TOKEN = 'apify_api_QkYqTLPdjPdAmaCJnyxd2UD0rp7gSR3IGLtp';
     // 2. The test channel you provided
     const TEST_CHANNELS = ["UC-CSyyi47VX1lD9zyeABW3w"];
 
-    async function fetchChannelRSS() {
-        for (const channelId of TEST_CHANNELS) {
-            try {
-                // Fetch the RSS feed (using a CORS proxy so it works in browser and app)
-                const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`);
-                const text = await res.text();
+    // ===== NATIVE BACKGROUND TASK =====
+    async function setupBackgroundSync() {
+        try {
+            const { BackgroundTask } = Capacitor.Plugins;
+            if (!BackgroundTask) return;
+
+            // 1. Define the task
+            BackgroundTask.defineTask('sync-omtube', async () => {
+                console.log("Background sync started...");
                 
-                // Parse the XML to get the latest videos
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(text, "text/xml");
-                const entries = xml.querySelectorAll("entry");
+                // Fetch from GitHub and Channels silently
+                await fetchGitHubVideos();
+                await fetchChannelRSS();
                 
-                // Get the latest 3 videos from this channel
-                const latest = Array.from(entries).slice(0, 3);
-                latest.forEach(entry => {
-                    const vid = entry.querySelector("yt\\:videoId")?.textContent || entry.getElementsByTagName("yt:videoId")[0]?.textContent;
-                    const title = entry.querySelector("title")?.textContent;
-                    if (vid) {
+                // Save the new videos to permanent storage
+                saveDynamicVideos();
+                
+                console.log("Background sync finished!");
+                return { success: true };
+            });
+
+            // 2. Register the task (15 minutes minimum on Android)
+            await BackgroundTask.registerTaskAsync('sync-omtube', {
+                minimumInterval: 15, // 15 minutes
+                requiresNetwork: true
+            });
+            console.log("✅ Native Background Task Registered");
+
+        } catch (e) {
+            console.warn("Background task setup failed:", e);
+        }
+    }
+       async function fetchChannelVideosAPI() {
+        const channelId = "UC-CSyyi47VX1lD9zyeABW3w"; // Your test channel
+        // Convert Channel ID (UC...) to Uploads Playlist ID (UU...)
+        const uploadsPlaylistId = "UU" + channelId.substring(2); 
+        
+        try {
+            const key = YOUTUBE_API_KEYS[0]; // Uses your first API key
+            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=3&key=${key}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.items) {
+                data.items.forEach(item => {
+                    const vid = item.snippet.resourceId.videoId;
+                    if (!window.DYNAMIC_VIDEOS.find(x => x.videoId === vid)) {
                         window.DYNAMIC_VIDEOS.push({
                             videoId: vid,
-                            title: title,
-                            channel: "Dynamic Channel",
-                            source: "OFFLINE" // Makes it look like a normal green offline tag!
+                            title: item.snippet.title,
+                            channel: "New Channel Upload",
+                            source: "OFFLINE"
                         });
                     }
                 });
-                        } catch(e) { console.warn("RSS error:", e); }
-        }
-        
-        // 🔥 MAGIC: Once the channel videos are downloaded, refresh the home screen instantly!
-        if (window.location.href.indexOf('localhost') > -1 || !document.getElementById('searchInput').value) {
-            goHome(); 
-        }
+                saveDynamicVideos();
+                if(!document.getElementById('searchInput').value) goHome();
+            }
+                } catch(e) { console.warn("API Channel Error:", e); }
     }
+
     const YOUTUBE_API_KEYS = [
         "AIzaSyCggxsKMnuCCyFuw0p3LjG9LD213VCBRx8", // Key 1
         "AIzaSyD7jsoKMSY6-nxG_HY4UbC-fCz689md8r0", // Key 2 (Islam Tube key)
@@ -1860,31 +1933,42 @@ function loadHomeSections() {
 function closeHistory() { document.getElementById('historyModal').classList.remove('open'); }
 function renderHistoryList() {
     const listEl = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('omtube_history') || '[]');
-    if (history.length === 0) { listEl.innerHTML = '<div class="history-empty">अभी तक कोई खोज नहीं हुई।</div>'; return; }
-    listEl.innerHTML = history.map((q, i) => {
-        const safe = q.replace(/</g, '&lt;').replace(/'/g, "\\'");
-        return `<div class="history-row">
-            <i class="fas fa-search h-icon"></i>
-            <span class="h-text" onclick="replayHistory('${safe}')">${q}</span>
+    // We use the new watch history now instead of just search text
+    const history = JSON.parse(localStorage.getItem('omtube_watch_history') || '[]');
+    
+    if (history.length === 0) { 
+        listEl.innerHTML = '<div class="history-empty">अभी तक कोई वीडियो नहीं देखा।</div>'; 
+        return; 
+    }
+    
+    listEl.innerHTML = history.map((v, i) => {
+        return `<div class="history-row" style="padding: 10px; gap: 12px;">
+            <div style="width: 70px; height: 40px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: #000; position: relative;" onclick="replayHistory('${v.videoId}')">
+                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" style="width: 100%; height: 100%; object-fit: cover;">
+                <i class="fas fa-play" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 12px; text-shadow: 0 0 5px #000;"></i>
+            </div>
+            <div class="h-text" style="font-size: 0.85rem; line-height: 1.2;" onclick="replayHistory('${v.videoId}')">
+                ${v.title}
+            </div>
             <button class="h-del" onclick="deleteHistoryItem(${i}); event.stopPropagation();"><i class="fas fa-times"></i></button>
         </div>`;
     }).join('');
 }
-function replayHistory(query) {
+function replayHistory(videoId) {
     closeHistory();
-    document.getElementById('searchInput').value = query;
-    searchVideos();
+    playVideo(videoId); // Directly plays the video again
 }
+
 function deleteHistoryItem(index) {
-    let history = JSON.parse(localStorage.getItem('omtube_history') || '[]');
+    let history = JSON.parse(localStorage.getItem('omtube_watch_history') || '[]');
     history.splice(index, 1);
-    localStorage.setItem('omtube_history', JSON.stringify(history));
+    localStorage.setItem('omtube_watch_history', JSON.stringify(history));
     renderHistoryList();
 }
+
 function clearHistory() {
-    if (!confirm('सभी खोज इतिहास हटाएँ?')) return;
-    localStorage.removeItem('omtube_history');
+    if (!confirm('क्या आप पूरा वॉच हिस्ट्री साफ़ करना चाहते हैं?')) return;
+    localStorage.removeItem('omtube_watch_history');
     renderHistoryList();
 }
 
@@ -1907,6 +1991,18 @@ document.addEventListener('click', function(e) {
     if (e.target.closest('[onclick*="toggleTopMenu"]')) return;
     m.classList.remove('open');
 });
+function openPlayerSettings() {
+    const currentSeek = localStorage.getItem('custom_seek') || '10';
+    const currentSpeed = localStorage.getItem('custom_speed') || '2';
+    
+    const seek = prompt("आगे/पीछे जाने के सेकंड डालें (जैसे: 10, 15, 30):", currentSeek);
+    if (seek !== null && !isNaN(seek)) localStorage.setItem('custom_seek', seek);
+    
+    const speed = prompt("लॉन्ग-प्रेस (Hold) पर स्पीड डालें (जैसे: 2, 3, 5):", currentSpeed);
+    if (speed !== null && !isNaN(speed)) localStorage.setItem('custom_speed', speed);
+    
+    alert("✅ सेटिंग्स सेव हो गईं!\nSeek: " + (seek || currentSeek) + "s\nSpeed: " + (speed || currentSpeed) + "x");
+}
 function toggleDrawer() {
         const drawer = document.getElementById('drawer');
         const overlay = document.getElementById('drawerOverlay');
@@ -2027,13 +2123,18 @@ const PLAYLIST_MAP = {
 // ===== SMART BACK — 1 step at a time =====
 function smartBack() {
     // 1) If video is playing
-            const wrapper = document.getElementById('videoWrapper');
+                const wrapper = document.getElementById('videoWrapper');
     if (wrapper && wrapper.classList.contains('open')) {
         if (wrapper.classList.contains('fullscreen-mode')) {
-            toggleVideoFullscreen(); // 1st swipe: Horizontal goes back to mini-player (portrait)
+            toggleVideoFullscreen(); // 1st step: force portrait & go to mini player
         } else {
-            closeMiniPlayer();       // 2nd swipe: Mini-player closes completely
+            closeMiniPlayer();       // 2nd step: close video completely
         }
+        return true;
+    }
+    // If app is somehow landscape without video
+    if (screen.orientation && screen.orientation.type.includes('landscape')) {
+        forcePortraitMode();
         return true;
     }
 
@@ -2158,8 +2259,9 @@ function maybeFetchFreshVideos() {
         console.log('⚠️ Fresh fetch failed — will retry later');
     });
 }
-function goHome() {
+async function goHome() {
     document.getElementById('searchInput').value = '';
+    
     // Show last-played video banner
     try {
         const last = JSON.parse(localStorage.getItem('omtube_last_played') || 'null');
@@ -2167,83 +2269,66 @@ function goHome() {
         if (banner) {
             if (last && last.id) {
                 banner.style.display = 'flex';
-                banner.innerHTML =
-                    '<div style="flex:1;min-width:0;padding-right:10px;">' +
-                        '<div style="font-size:0.7rem;color:#888;margin-bottom:3px;">▶️ पिछला देखा</div>' +
-                        '<div style="font-size:0.9rem;font-weight:700;color:#D32F2F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (last.title || '').replace(/</g, '&lt;') + '</div>' +
-                    '</div>' +
-                    '<div style="width:80px;height:45px;border-radius:8px;overflow:hidden;flex-shrink:0;border:2px solid #FFD700;">' +
-                        '<img src="https://img.youtube.com/vi/' + last.id + '/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;">' +
-                    '</div>';
+                banner.innerHTML = '<div style="flex:1;min-width:0;padding-right:10px;"><div style="font-size:0.7rem;color:#888;margin-bottom:3px;">▶️ पिछला देखा</div><div style="font-size:0.9rem;font-weight:700;color:#D32F2F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (last.title || '').replace(/</g, '&lt;') + '</div></div><div style="width:80px;height:45px;border-radius:8px;overflow:hidden;flex-shrink:0;border:2px solid #FFD700;"><img src="https://img.youtube.com/vi/' + last.id + '/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;"></div>';
                 banner.onclick = function() { playVideo(last.id, last.channel || '', ''); };
             } else {
                 banner.style.display = 'none';
             }
         }
     } catch(e) {}
+    
     homeRefreshCount++;
     appModeActive = true;
     isAppLocked = true;
     enterAppFullscreen();
 
-    // Build a random mix of Bhakti videos from all playlists
+    // Build a random mix of offline videos
     const sources = [
-        'PLAYLIST_KRISHNA_LEELA_FULL',
-        'PLAYLIST_RAMAYAN_FULL',
-        'PLAYLIST_MAHABHARAT',
-        'PLAYLIST_SANKAT_MOCHAN',
-        'PLAYLIST_SHIV_MAHAPURAN',
-        'PLAYLIST_JAI_SHANI_DEV',
-        'PLAYLIST_DURGA',
-        'PLAYLIST_AARTI',
-        'PLAYLIST_GITA',
-        'PLAYLIST_BAJRANG_BALI',
-        'PLAYLIST_BAAL_KRISHNA',
-        'PLAYLIST_MAHALAXMI'
+        'PLAYLIST_KRISHNA_LEELA_FULL', 'PLAYLIST_RAMAYAN_FULL', 'PLAYLIST_MAHABHARAT',
+        'PLAYLIST_SANKAT_MOCHAN', 'PLAYLIST_SHIV_MAHAPURAN', 'PLAYLIST_JAI_SHANI_DEV',
+        'PLAYLIST_DURGA', 'PLAYLIST_AARTI', 'PLAYLIST_GITA', 'PLAYLIST_BAJRANG_BALI',
+        'PLAYLIST_BAAL_KRISHNA', 'PLAYLIST_MAHALAXMI'
     ];
 
     const pool = [];
     sources.forEach(name => {
         const arr = window[name];
         if (Array.isArray(arr) && arr.length > 0) {
-            // Pick 3-5 random from each playlist
             const n = Math.min(5, arr.length);
             for (let i = 0; i < n; i++) {
                 const v = arr[Math.floor(Math.random() * arr.length)];
-                if (v) pool.push({
-                    title: v.title,
-                    videoId: v.id,
-                    channel: name.replace('PLAYLIST_', '').replace(/_/g, ' ') + ' · भक्ति'
-                });
+                if (v) pool.push({ title: v.title, videoId: v.id, channel: name.replace('PLAYLIST_', '').replace(/_/g, ' ') + ' · भक्ति', source: 'PLAYLIST' });
             }
         }
     });
 
-    // Fallback to fresh trending if no playlists
-    if (pool.length === 0) {
-        try {
-            const fresh = JSON.parse(localStorage.getItem('omtube_fresh_trending') || '[]');
-            fresh.slice(0, 10).forEach(v => pool.push({
-                title: v.title, videoId: v.id, channel: 'ट्रेंडिंग'
-            }));
-        } catch(e) {}
-    }
-
-        // 🌟 MAGIC: Add our dynamic videos to the home screen pool
-    window.DYNAMIC_VIDEOS.forEach(v => {
-        if (!pool.find(p => p.videoId === v.videoId)) {
-            pool.push(v);
+       // 🌟 FETCH NEWEST VIDEOS FROM CLOUDFLARE (ALWAYS ON TOP)
+    const cloudVideos = [];
+    try {
+        const cfRes = await fetch('https://omtube-search-api.uma7905439195.workers.dev/');
+        const cfVideos = await cfRes.json();
+        if (Array.isArray(cfVideos)) {
+            // Grab the latest 20 videos from Cloudflare
+            cfVideos.slice(0, 20).forEach(v => {
+                cloudVideos.push({
+                    title: v.title,
+                    videoId: v.id,
+                    channel: "OmTube Cloud · CLOUDFLARE",
+                    source: "CLOUDFLARE"
+                });
+            });
         }
-    });
+    } catch (e) { console.log("Home Cloudflare error"); }
 
-    // Shuffle and take 20
-    const homeFeed = pool.sort(() => 0.5 - Math.random()).slice(0, 20);
-    renderVideos(homeFeed);
-
-    // Load Trending / Live / Latest rows above the main feed
-    // loadHomeSections();
+    // Shuffle ONLY the offline videos
+    const shuffledOffline = pool.sort(() => 0.5 - Math.random()).slice(0, 15);
+    
+    // 🚀 FORCE CLOUDFLARE TO BE FIRST, THEN ADD OFFLINE BELOW
+    const finalFeed = [...cloudVideos, ...shuffledOffline];
+    
+    // Render them!
+    renderVideos(finalFeed);
 }
-
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         toggleDrawer();
@@ -2318,6 +2403,155 @@ function setupMediaSession(videoId, channelName) {
     } catch(e) { console.warn('MediaSession error:', e); }
 }
 
+function setupHoldAndSwipe() {
+    const wrapper = document.getElementById('videoWrapper');
+    let leftZone = document.getElementById('leftDragZone');
+    let rightZone = document.getElementById('rightDragZone');
+    
+                       if (!leftZone) {
+        leftZone = document.createElement('div');
+        leftZone.id = 'leftDragZone';
+        // touch-action: none prevents the background page from scrolling
+        leftZone.style.cssText = 'position:absolute; top:15%; left:0; width:35%; height:50%; z-index:9998; background:transparent; touch-action:none;';
+        wrapper.appendChild(leftZone);
+        
+        rightZone = document.createElement('div');
+        rightZone.id = 'rightDragZone';
+        rightZone.style.cssText = 'position:absolute; top:15%; right:0; width:35%; height:50%; z-index:9998; background:transparent; touch-action:none;';
+        wrapper.appendChild(rightZone);
+    }
+    if (wrapper._holdSetup) return;
+    wrapper._holdSetup = true;
+
+    let startY = 0;
+    let startTime = 0;
+    let isDragging = false;
+    let isHolding = false;
+    let holdTimer = null;
+    let lastTap = 0;
+
+    const setupZone = (zone, isRight) => {
+        zone.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+            isDragging = false;
+            isHolding = false;
+            wrapper.style.transition = 'none';
+
+            // ⏱️ Long Press Timer (Speed Up)
+            holdTimer = setTimeout(() => {
+                if (!isDragging && window.ytPlayerInstance && window.ytPlayerInstance.setPlaybackRate) {
+                    isHolding = true;
+                    const customSpeed = parseInt(localStorage.getItem('custom_speed') || '2');
+                    window.ytPlayerInstance.setPlaybackRate(customSpeed);
+                    
+                    // Visual indicator
+                    const ind = document.createElement('div');
+                    ind.id = 'speedIndicator';
+                    ind.style.cssText = 'position:fixed; top:20%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:8px 16px; border-radius:20px; font-weight:bold; z-index:99999; font-size:14px;';
+                    ind.innerText = `▶ ${customSpeed}x Speed`;
+                    document.body.appendChild(ind);
+                }
+            }, 500);
+        }, { passive: true });
+
+        zone.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = startY - currentY; 
+            
+            // If moved more than 30px, it's a drag, cancel hold timer
+            if (Math.abs(deltaY) > 30 && !isHolding) {
+                clearTimeout(holdTimer);
+                isDragging = true;
+                
+                const isFs = wrapper.classList.contains('fullscreen-mode');
+                if (!isFs && deltaY > 0) {
+                    const scale = 1 + Math.min(0.5, deltaY / 500); 
+                    wrapper.style.transform = `scale(${scale})`;
+                } else if (isFs && deltaY < 0) {
+                    const progress = Math.min(1, Math.abs(deltaY) / 200);
+                    const scale = 1 - (0.5 * progress); 
+                    const translateY = (window.innerHeight * 0.5) * progress; 
+                    wrapper.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                }
+            }
+        }, { passive: true });
+
+        zone.addEventListener('touchend', (e) => {
+            clearTimeout(holdTimer);
+            
+            // Reset Speed if holding
+            if (isHolding) {
+                if (window.ytPlayerInstance && window.ytPlayerInstance.setPlaybackRate) {
+                    window.ytPlayerInstance.setPlaybackRate(1);
+                }
+                const ind = document.getElementById('speedIndicator');
+                if (ind) ind.remove();
+                isHolding = false;
+                return;
+            }
+
+            // Finish Drag
+            if (isDragging) {
+                isDragging = false;
+                wrapper.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                wrapper.style.transform = ''; 
+                const deltaY = startY - e.changedTouches[0].clientY;
+                const isFs = wrapper.classList.contains('fullscreen-mode');
+                
+                                // Lowered threshold from 80 to 40 for faster, more sensitive snapping
+                if (deltaY > 40 && !isFs) toggleVideoFullscreen();
+                else if (deltaY < -40 && isFs) toggleVideoFullscreen();
+                return;
+            }
+
+            // ⏱️ Double Tap Logic (Seek)
+            const tapDuration = Date.now() - startTime;
+            if (tapDuration < 250) { // It was a tap, not a drag
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                    // DOUBLE TAP DETECTED
+                    if (window.ytPlayerInstance && window.ytPlayerInstance.getCurrentTime) {
+                        const customSeek = parseInt(localStorage.getItem('custom_seek') || '10');
+                        const currentTime = window.ytPlayerInstance.getCurrentTime();
+                        
+                        if (isRight) {
+                            // Fast Forward
+                            window.ytPlayerInstance.seekTo(currentTime + customSeek, true);
+                            showSeekIndicator(`⏩ +${customSeek}s`);
+                        } else {
+                            // Rewind
+                            window.ytPlayerInstance.seekTo(Math.max(0, currentTime - customSeek), true);
+                            showSeekIndicator(`⏪ -${customSeek}s`);
+                        }
+                    }
+                    lastTap = 0; // Reset
+                } else {
+                    lastTap = now;
+                }
+            }
+        });
+    };
+
+    setupZone(leftZone, false);
+    setupZone(rightZone, true);
+}
+
+// Helper to show visual feedback for Seek
+function showSeekIndicator(text) {
+    const wrapper = document.getElementById('videoWrapper');
+    if (!wrapper) return;
+    
+    const ind = document.createElement('div');
+    // Tiny, white text, inside the video wrapper
+    ind.style.cssText = 'position:absolute; top:15%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); color:#ffffff; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold; z-index:99999; pointer-events:none; transition: opacity 0.4s ease-out;';
+    ind.innerText = text;
+    
+    wrapper.appendChild(ind); // Appends INSIDE the video, not to body
+    
+    setTimeout(() => { ind.style.opacity = '0'; }, 600);
+    setTimeout(() => ind.remove(), 1000);
+}
 // ===== 2-FINGER GESTURE: pinch-in = mini, spread-out = fullscreen =====
 function setupVideoSwipe() {
     const wrapper = document.getElementById('videoWrapper');
@@ -2469,7 +2703,88 @@ async function isVideoAvailable(videoId) {
     }
 }
 
+async function extractAndPlayNativeAudio(videoId) {
+    try {
+        const pipedInstances = [
+            'https://pipedapi.kavin.rocks', 
+            'https://pipedapi.adminforge.de',
+            'https://pipedapi.leptons.xyz'
+        ];
+        
+        let audioUrl = null;
+        
+        // Try to get the audio stream from multiple instances
+        for (const host of pipedInstances) {
+            try {
+                const res = await fetch(host + '/streams/' + videoId);
+                if (!res.ok) continue;
+                const data = await res.json();
+                
+                if (data.audioStreams && data.audioStreams.length > 0) {
+                    // Find the highest quality audio stream
+                    const stream = data.audioStreams.find(s => s.mimeType.includes('audio/mp4')) || data.audioStreams[0];
+                    audioUrl = stream.url;
+                    break;
+                }
+            } catch(e) { continue; }
+        }
+
+        if (audioUrl && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeAudio) {
+            // Destroy previous if it exists
+            try { await window.Capacitor.Plugins.NativeAudio.destroy({ assetId: 'bg_audio' }); } catch(e) {}
+            
+            // Create and play
+            // Get the video details for the notification
+const videoTitle = window.currentPlayingTitle || "OmTube Audio";
+const channelName = window.currentPlayingChannel || "OmTube";
+
+await window.Capacitor.Plugins.NativeAudio.create({
+    assetId: 'bg_audio',
+    assetPath: audioUrl,
+    audioChannelNum: 2,
+    isUrl: true,
+    metadata: {
+        title: videoTitle,
+        artist: channelName,
+        album: "OmTube",
+        artworkSource: "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg"
+    }
+});
+            await window.Capacitor.Plugins.NativeAudio.play({ assetId: 'bg_audio' });
+            console.log("Native Audio Ready & Playing");
+        }
+    } catch(e) {
+        console.warn("Silent Audio Extraction Failed"); // Fails silently without annoying the user
+    }
+}
 async function playVideo(videoId, channelName = '', channelId = '') {
+    window.currentPlayingId = videoId;
+    window.currentPlayingTitle = channelName || "OmTube Video";
+    window.currentPlayingChannel = channelName || "OmTube";
+    
+    // 💾 SAVE TO WATCH HISTORY
+    try {
+        let history = JSON.parse(localStorage.getItem('omtube_watch_history') || '[]');
+        
+        // Try to find the actual title from the loaded playlists
+        let realTitle = channelName || 'Video';
+        if (window.currentPlaylist) {
+            const found = window.currentPlaylist.find(v => v.id === videoId || v.videoId === videoId);
+            if (found) realTitle = found.title;
+        } else if (window.ALL_VIDEO_POOL) {
+            const found = window.ALL_VIDEO_POOL.find(v => v.videoId === videoId);
+            if (found) realTitle = found.title;
+        }
+
+        // Remove it if it already exists (so it moves to top)
+        history = history.filter(v => v.videoId !== videoId);
+        
+        // Add to top and limit to 20 videos
+        history.unshift({ videoId: videoId, title: realTitle });
+        history = history.slice(0, 20);
+        
+        localStorage.setItem('omtube_watch_history', JSON.stringify(history));
+    } catch(e) {}
     // Update playlist index to match the video being played
     if (window.currentPlaylist && window.currentPlaylist.length) {
         const idx = window.currentPlaylist.findIndex(v => (v.id || v.videoId) === videoId);
@@ -2510,7 +2825,7 @@ async function playVideo(videoId, channelName = '', channelId = '') {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     const origin = window.location.origin || 'https://localhost';
-    content.innerHTML = `<iframe id="youtube-iframe" src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&enablejsapi=1&origin=${encodeURIComponent(origin)}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+        content.innerHTML = `<iframe id="youtube-iframe" src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=0&controls=1&iv_load_policy=3&fs=0&enablejsapi=1&origin=${encodeURIComponent(origin)}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
     wrapper.classList.remove('audio-only');
     wrapper.classList.remove('fullscreen-mode');
     wrapper.classList.add('open');
@@ -2548,11 +2863,12 @@ async function playVideo(videoId, channelName = '', channelId = '') {
             });
         }
     } catch(e) {}
-           setTimeout(setupControlsAutoHide, 100);
-    setTimeout(setupLockTapHandler, 100);
-    setTimeout(setupVideoSwipe, 500);
-    setTimeout(setupVideoSwipe, 1500);
-    window.ytPlayerInstance = null;
+                   setupMediaSession(videoId, channelName);
+        setTimeout(setupLockTapHandler, 200);
+        setTimeout(setupHoldAndSwipe, 200); // <--- ADD THIS LINE
+        setTimeout(setupVideoSwipe, 500);
+        setTimeout(setupVideoSwipe, 1500);
+        window.ytPlayerInstance = null;
            // Fast-attach error + ended handler
     let _tries = 0;
     const _attach = setInterval(() => {
@@ -2614,14 +2930,16 @@ async function playVideo(videoId, channelName = '', channelId = '') {
             screen.orientation.unlock();
         }
     } catch(e) {}
+        // 🔥 FORCE APP TO GO VERTICAL WHEN VIDEO CLOSES
+    forcePortraitMode();
+
     // Disable background mode
-        try {
+    try {
         if (window.cordova && window.cordova.plugins && window.cordova.plugins.backgroundMode) {
             window.cordova.plugins.backgroundMode.disable();
         }
     } catch(e) {}
 }
-
 // This holds the YouTube player instance
 window.ytPlayerInstance = null;
 
@@ -2789,14 +3107,58 @@ function toggleOverlayCover() {
         if (btn) btn.style.background = '#333';
     }
 }
-function toggleAudioMode() {
+async function toggleAudioMode() {
     const wrapper = document.getElementById('videoWrapper');
-    wrapper.classList.toggle('audio-only');
     const audioBtn = document.querySelector('#audioBtn i');
+    const NativeAudio = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeAudio;
+
+    // 1. TURN OFF AUDIO MODE (Tap again to show video)
     if (wrapper.classList.contains('audio-only')) {
-        audioBtn.className = 'fas fa-headphones';
-    } else {
-        audioBtn.className = 'fas fa-video';
+        wrapper.classList.remove('audio-only');
+        if (audioBtn) audioBtn.className = 'fas fa-headphones';
+        
+        // Stop background audio silently
+        if (NativeAudio) {
+            try { await NativeAudio.stop({ assetId: 'bg_audio' }); } catch(e) {}
+            try { await NativeAudio.unload({ assetId: 'bg_audio' }); } catch(e) {}
+        }
+        document.getElementById('videoContent').style.opacity = '1';
+        return;
+    }
+
+    // 2. TURN ON AUDIO MODE (Show Animation immediately)
+    const videoId = window.currentPlayingId;
+    if (!videoId) return; // Do nothing if no video is playing
+
+    wrapper.classList.add('audio-only');
+    if (audioBtn) audioBtn.className = 'fas fa-video';
+    document.getElementById('videoContent').style.opacity = '0';
+
+    // 3. TRY TO PLAY IN BACKGROUND (Silently)
+    try {
+        // We use the local library we installed to get the audio
+        const yt = await import('yt-innertube');
+        const audioUrl = await yt.getAudioStream(videoId);
+
+        if (audioUrl && NativeAudio) {
+            await NativeAudio.preload({
+                assetId: 'bg_audio',
+                assetPath: audioUrl,
+                audioChannelNum: 2,
+                isUrl: true,
+                showNotification: true,
+                notificationTitle: window.currentPlayingTitle || "OmTube Audio",
+                notificationArtist: window.currentPlayingChannel || "OmTube"
+            });
+            await NativeAudio.play({ assetId: 'bg_audio' });
+            console.log("✅ Audio playing in background");
+        }
+    } catch(e) {
+        // 🔇 SILENT FAIL: No popup, no Hindi message. Just a quiet console log.
+        console.log("Audio extraction failed silently:", e);
+        
+        // Even if it fails, we stay in Audio Mode (Animation shows). 
+        // The user can tap again to go back to the video.
     }
 }
     function handleClosePlayer() {
@@ -2826,32 +3188,63 @@ function toggleAudioMode() {
    
 function forceLandscape() {
     const wrapper = document.getElementById('videoWrapper');
-        if (wrapper.classList.contains('fullscreen-mode')) {
-        // If already horizontal, go back to mini player (forces vertical)
-        toggleVideoFullscreen(); 
+    if (wrapper.classList.contains('fullscreen-mode')) {
+        // EXIT to Mini Player (Force Portrait)
+        wrapper.classList.remove('fullscreen-mode');
+        wrapper.classList.remove('rotated-landscape');
+        document.body.classList.remove('video-fullscreen');
+        document.body.classList.add('video-playing');
+        if (document.fullscreenElement) { document.exitFullscreen().catch(()=>{}); }
+        
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ScreenOrientation) {
+            window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'portrait' });
+        } else if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(()=>{});
+        }
+        
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+            window.Capacitor.Plugins.StatusBar.show();
+            window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: false });
+        }
     } else {
-        // Force horizontal
+        // ENTER Fullscreen (Force Landscape)
         wrapper.classList.add('fullscreen-mode');
         document.body.classList.add('video-fullscreen');
         document.body.classList.remove('video-playing');
-        try {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(()=>{});
-            }
-        } catch(e) {}
-        // Hide Status Bar (Battery/Time) for true fullscreen
+        
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ScreenOrientation) {
+            window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+        } else if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(()=>{});
+        }
+        
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
             window.Capacitor.Plugins.StatusBar.hide();
             window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: true });
         }
     }
-} 
+}
+function forcePortraitMode() {
+    try {
+        // Use Capacitor Native Plugin for 100% forced lock
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ScreenOrientation) {
+            window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'portrait' });
+        } else if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(()=>{});
+        }
+    } catch(e) {}
+    
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+        window.Capacitor.Plugins.StatusBar.show();
+        window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: false });
+    }
+}
   function toggleVideoFullscreen() {
     const wrapper = document.getElementById('videoWrapper');
     const content = document.getElementById('videoContent');
     const btnIcon = document.querySelector('#fsBtn i');
 
-    if (wrapper.classList.contains('fullscreen-mode')) {
+        if (wrapper.classList.contains('fullscreen-mode')) {
         // ===== EXIT FULLSCREEN → back to portrait mini =====
         wrapper.classList.remove('fullscreen-mode');
         wrapper.classList.remove('rotated-landscape');
@@ -2863,25 +3256,8 @@ function forceLandscape() {
             document.exitFullscreen().catch(()=>{});
         }
 
-                        // Show system status bar again
-        try {
-            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
-                window.Capacitor.Plugins.StatusBar.show();
-                window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: false });
-            }
-        } catch (e) {}
-
-        // 🔥 FORCE VERTICAL MODE (Portrait)
-        try {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('portrait').then(() => {
-                    // Unlock after 500ms so the user can rotate again later if they want
-                    setTimeout(() => {
-                        try { screen.orientation.unlock(); } catch(e) {}
-                    }, 500);
-                }).catch(()=>{});
-            }
-        } catch(e) {}
+        // 🔥 FORCE VERTICAL MODE using your native plugin function
+        forcePortraitMode();
 
         btnIcon.className = 'fas fa-expand';
     } else {
@@ -2957,6 +3333,23 @@ async function fetchInvidiousResults(query, max) {
         const results = await Promise.any(promises);
         return results || [];
     } catch (e) {
+        return [];
+    }
+}
+async function fetchCloudflareResults(query) {
+    try {
+        const res = await fetch('https://omtube-search-api.uma7905439195.workers.dev/?q=' + encodeURIComponent(query));
+        const data = await res.json();
+        if (Array.isArray(data)) {
+            return data.map(v => ({
+                videoId: v.id,
+                title: v.title,
+                channel: "OmTube Cloud · CLOUDFLARE",
+                source: "CLOUDFLARE" // We will color this tag next
+            }));
+        }
+        return [];
+    } catch(e) {
         return [];
     }
 }
@@ -3142,7 +3535,7 @@ function fetchYouTubeVideos(query) {
                 </div>
                 <div class="video-info">
                     <div class="video-title">${video.title}</div>
-                    <div class="video-meta"><span class="channel" style="color:${(video.channel||'').includes('OFFLINE') ? '#2e7d32' : (video.channel||'').includes('PIPED') ? '#1976d2' : '#D32F2F'}; font-weight:600;">${video.channel}</span></div>
+                    <div class="video-meta"><span class="channel" style="color:${(video.channel||'').includes('OFFLINE') ? '#2e7d32' : (video.channel||'').includes('PIPED') ? '#1976d2' : (video.channel||'').includes('CLOUDFLARE') ? '#f57c00' : '#D32F2F'}; font-weight:600;">${video.channel}</span></div>
                 </div>`;
             container.appendChild(card);
         });
@@ -3224,7 +3617,7 @@ function fetchYouTubeVideos(query) {
                 </div>
                 <div class="video-info">
                     <div class="video-title">${video.title}</div>
-                    <div class="video-meta"><span class="channel" style="color:${(video.channel||'').includes('OFFLINE') ? '#2e7d32' : (video.channel||'').includes('PIPED') ? '#1976d2' : '#D32F2F'}; font-weight:600;">${video.channel}</span></div>
+                    <div class="video-meta"><span class="channel" style="color:${(video.channel||'').includes('OFFLINE') ? '#2e7d32' : (video.channel||'').includes('PIPED') ? '#1976d2' : (video.channel||'').includes('CLOUDFLARE') ? '#f57c00' : '#D32F2F'}; font-weight:600;">${video.channel}</span></div>
                 </div>`;
                         container.appendChild(card);
         });
@@ -3462,7 +3855,7 @@ const allVideos = [];
     }
 
     // ============ STEP 4 — OFFLINE & OTHER APIs (Below YouTube) ============
-    let pending = 2;
+    let pending = 4;
     function checkDone() {
         pending--;
         if (pending === 0) {
@@ -3480,12 +3873,18 @@ const allVideos = [];
         .catch(() => {})
         .finally(checkDone);
 
-    // Load Piped
+       // Piped
     fetchPipedResults(query)
         .then(piped => { if (addUnique(piped) > 0) paint(); })
         .catch(() => {})
         .finally(checkDone);
-}
+
+       // 🌟 Cloudflare 500MB Database
+    fetchCloudflareResults(query)
+        .then(cf => { if (addUnique(cf) > 0) paint(); })
+        .catch(() => {})
+        .finally(checkDone);
+} // 🔥 THIS IS THE MISSING CLOSING BRACKET
 
 // ================================================
 // ===== REMOTE MODE — WebSocket server + QR =====
@@ -3869,7 +4268,7 @@ const EffectsEngine = (function() {
         }
     }
 
-       return { init, setEffect, stop };
+          return { init, setEffect, stop, addCustomEffect: (name, config) => { EFFECTS[name] = config; } };
 })();
 
 
@@ -3880,8 +4279,18 @@ window.startCustomEffect = function() {
     const color = document.getElementById('customEffectColor').value;
     if (!text) return alert('कृपया कोई नाम लिखें!');
     
-    // Inject custom effect into the engine
-    EffectsEngine.customEffect = { type:'text', chars:[text], colors:[color, '#FFFFFF'], size:[24,40], speed:[1.5,3], drift:[-0.5,0.5], rot:[-0.05,0.05], rate:5 };
+    // Inject the custom effect directly into the engine's internal list
+    const cfg = { 
+        type:'text', 
+        chars:[text], 
+        colors:[color, '#FFFFFF'], 
+        size:[24,40], 
+        speed:[0.8,1.8], 
+        drift:[-0.4,0.4], 
+        rot:[-0.05,0.05], 
+        rate:5 
+    };
+    EffectsEngine.addCustomEffect('customEffect', cfg);
     EffectsEngine.setEffect('customEffect');
     closeEffectsMenu();
 };
@@ -4478,10 +4887,30 @@ if ('Notification' in window && Notification.permission === 'granted') {
 
 // ---- 1) Native Android hardware/gesture back (Capacitor) ----
 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-        window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
-        __doSmartBack();
+    window.Capacitor.Plugins.App.addListener('backButton', () => {
+        const wrapper = document.getElementById('videoWrapper');
+        
+        // 1. If in Fullscreen, go back to Mini Player (which forces portrait)
+        if (wrapper && wrapper.classList.contains('open') && wrapper.classList.contains('fullscreen-mode')) {
+            toggleVideoFullscreen(); 
+            return;
+        }
+        // 2. If in Mini Player, close the video completely
+        if (wrapper && wrapper.classList.contains('open')) {
+            closeMiniPlayer(); 
+            return;
+        }
+        // 3. If searching, go back to Home
+        if (document.getElementById('searchInput').value.trim() !== '') {
+            goHome();
+            return;
+        }
+        // 4. If on Home, close the app
+               // Instead of exiting completely (which kills audio), just minimize the app
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.minimizeApp();
+        }
     });
-    console.log('✅ Native back gesture handler installed');
 }
 
 // ---- 2) Browser back (history popstate) — works with edge swipe on mobile browsers ----
@@ -4490,13 +4919,18 @@ if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App
 // ================================================================
 function __doSmartBack() {
     // 1) Video playing
-            const wrapper = document.getElementById('videoWrapper');
+                const wrapper = document.getElementById('videoWrapper');
     if (wrapper && wrapper.classList.contains('open')) {
         if (wrapper.classList.contains('fullscreen-mode')) {
-            toggleVideoFullscreen(); // 1st swipe: Horizontal goes back to mini-player (portrait)
+            toggleVideoFullscreen(); // 1st step: force portrait & go to mini player
         } else {
-            closeMiniPlayer();       // 2nd swipe: Mini-player closes completely
+            closeMiniPlayer();       // 2nd step: close video completely
         }
+        return true;
+    }
+    // If app is somehow landscape without video
+    if (screen.orientation && screen.orientation.type.includes('landscape')) {
+        forcePortraitMode();
         return true;
     }
 
@@ -4610,12 +5044,25 @@ window.addEventListener('popstate', function(e) {
 // ===== After ALL playlists load — now safe to render home =====
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
-                try {
-            // 1. Fetch from GitHub and Channels silently
-            fetchGitHubVideos();
-            fetchChannelRSS(); 
+        try {
+            // 1. Load saved videos immediately
+            loadDynamicVideos(); 
             
-            // 2. Render the home screen
+            // 2. Fetch fresh videos silently
+            fetchGitHubVideos();
+            fetchChannelVideosAPI(); 
+            
+            // 3. Start the 15-minute background timer
+            setupBackgroundSync();
+
+            // 4. ✅ ASK ANDROID TO NOT KILL THE APP
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DontKillMyApp) {
+                window.Capacitor.Plugins.DontKillMyApp.requestOptimization({}).then(() => {
+                    console.log("✅ Battery optimization request sent.");
+                }).catch(e => console.log("Battery request ignored."));
+            }
+            
+            // 5. Render the home screen
             goHome();
             console.log('✅ Home rendered after playlists loaded');
         } catch(e) {
