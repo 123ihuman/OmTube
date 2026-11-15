@@ -1,55 +1,66 @@
 import subprocess
-import os
-import urllib.request
+import requests
 import json
-import glob
+import re
+import time
 
-# 🔥 MAGIC: Find all files ending in _channels.txt in the repo
-channel_files = glob.glob('*_channels.txt')
-all_sql = []
+# 🔥 YOUR CLOUDFLARE DETAILS
+ACCOUNT_ID = "5e8795133a1609ed5afdafa6bc040751"
+DATABASE_ID = "e9e8f7ad-f6a6-4456-aa87-29f01d1eec90"
+API_TOKEN = "cfut_0Ts9feAEdYyMKjJL5AIeOojkUWF0kXQIg8M2T5FE412358ac"
 
-for file_path in channel_files:
-    # Extract the app name from the filename (e.g., "islamtube_channels.txt" -> "islamtube")
-    app_tag = file_path.replace('_channels.txt', '').strip().lower()
-    
-    with open(file_path, 'r') as f:
-        channels = [line.strip() for line in f if line.strip()]
+CHANNELS_FILE = "all_new_channels.txt"
 
-    for ch in channels:
-        url = f"https://www.youtube.com/channel/{ch}/videos"
-        try:
-            result = subprocess.run(
-                ['yt-dlp', '--flat-playlist', '--playlist-end', '3', '--print', '%(id)s|%(title)s', url],
-                capture_output=True, text=True, timeout=15
-            )
-            for line in result.stdout.strip().split('\n'):
-                if '|' in line:
-                    vid, title = line.split('|', 1)
-                    # Tag dynamically based on the filename
-                    title = f"[{app_tag}] " + title.replace("'", "''")
-                    all_sql.append(f"('{vid}', '{title}')")
-        except Exception:
-            pass
-
-if all_sql:
-    sql_statements = ""
-    for i in range(0, len(all_sql), 50):
-        batch = all_sql[i:i+50]
-        sql_statements += "INSERT OR REPLACE INTO videos (video_id, title) VALUES " + ", ".join(batch) + ";\n"
-    
-    ACCOUNT_ID = os.environ.get('CLOUDFLARE_ACCOUNT_ID')
-    API_TOKEN = os.environ.get('CLOUDFLARE_API_TOKEN')
-    DATABASE_ID = os.environ.get('DATABASE_ID')
-    
-    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/d1/database/{DATABASE_ID}/query"
-    data = json.dumps({"sql": sql_statements}).encode('utf-8')
-    
-    req = urllib.request.Request(url, data=data, method='POST')
-    req.add_header('Authorization', f'Bearer {API_TOKEN}')
-    req.add_header('Content-Type', 'application/json')
-    
+def get_latest_videos(channel_id):
+    url = f"https://www.youtube.com/channel/{channel_id}"
     try:
-        with urllib.request.urlopen(req) as response:
-            print("✅ Successfully uploaded auto-updated videos for ALL apps!")
-    except Exception as e:
-        print(f"❌ Upload failed: {e}")
+        # Grabs the 10 newest videos
+        result = subprocess.run(
+            ['yt-dlp', '--flat-playlist', '--playlist-end', '10', '--print', '%(id)s|%(title)s', url],
+            capture_output=True, text=True, timeout=60
+        )
+        return result.stdout.strip().split('\n')
+    except:
+        return []
+
+def push_to_cloudflare(sql_query):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/d1/database/{DATABASE_ID}/query"
+    headers = {"Authorization": f"Bearer {API_TOKEN}", "Content-Type": "application/json"}
+    data = {"sql": sql_query}
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()
+
+def main():
+    with open(CHANNELS_FILE, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    sql_values = []
+    for line in lines:
+        id_match = re.search(r'(UC[a-zA-Z0-9_-]{22})', line)
+        if not id_match: continue
+        channel_id = id_match.group(1)
+        channel_name = line.replace(channel_id, '').strip()
+
+        videos = get_latest_videos(channel_id)
+        for v in videos:
+            if '|' in v:
+                vid_id, title = v.split('|', 1)
+                safe_title = title.replace("'", "''")
+                # Tag for Study Tube AND YouTube Pro
+                full_title = f"[studytube] [protube] [ch:{channel_name}] {safe_title}"
+                sql_values.append(f"('{vid_id}', '{full_title}')")
+        
+        # 1 second delay between channels to avoid YouTube blocks
+        time.sleep(1)
+
+    if sql_values:
+        for i in range(0, len(sql_values), 50):
+            batch = sql_values[i:i+50]
+            sql = "INSERT OR IGNORE INTO videos (video_id, title) VALUES " + ", ".join(batch) + ";"
+            print(push_to_cloudflare(sql))
+        print(f"✅ Pushed {len(sql_values)} new videos to Cloudflare.")
+    else:
+        print("No new videos found.")
+
+if __name__ == "__main__":
+    main()
