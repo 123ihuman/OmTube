@@ -9,7 +9,7 @@ ACCOUNT_ID = "5e8795133a1609ed5afdafa6bc040751"
 DATABASE_ID = "e9e8f7ad-f6a6-4456-aa87-29f01d1eec90"
 API_TOKEN = "cfut_0Ts9feAEdYyMKjJL5AIeOojkUWF0kXQIg8M2T5FE412358ac"
 
-CHANNELS_FILE = "all_new_channels.txt"
+CHANNELS_FILE = "master_channels.txt"
 
 def get_latest_videos(channel_id):
     url = f"https://www.youtube.com/channel/{channel_id}"
